@@ -1,7 +1,8 @@
 import customtkinter as ctk
 from gui.header import Header
-from gui.left_frame import Interests
-from gui.right_frame import ProhibitedWords
+from gui.interests_frame import Interests
+from gui.prohib_words_frame import ProhibitedWords
+from gui.config_frame import Configs
 import os
 
 class NaverKinAnswerBot(ctk.CTk):
@@ -10,24 +11,47 @@ class NaverKinAnswerBot(ctk.CTk):
         self.title("NaverKin Answer Bot")
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
-        self.window_width = 700
-        self.window_height = 600
+        self.window_width = 920
+        self.window_height = 635
         self.x_coordinate = int((self.screen_width/2) - (self.window_width/2))
         self.y_coordinate = int((self.screen_height/2) - (self.window_height/1.9))
         self.geometry(f"{self.window_width}x{self.window_height}+{self.x_coordinate}+{self.y_coordinate}")
-        self.grid_columnconfigure((0, 3), weight=1)
+        self.grid_columnconfigure((0, 4), weight=1)
+        self.grid_rowconfigure(3, weight=1)
 
         self.header = Header(master=self, width = 600, height = 150)
-        self.header.grid(pady=(10, 5), columnspan=2, column=1, padx=3)
+        self.header.grid(pady=(10, 5), columnspan=3, column=1, padx=3)
 
-        self.left_frame = Interests(self, width=160)
-        self.left_frame.grid(column=1, row=2, sticky='ewns', padx=3)
+        self.interests = Interests(self, width=160, height=420)
+        self.interests.grid(column=1, row=2, sticky='ewns', padx=3)
 
-        self.right_frame = ProhibitedWords(self, width=350)
-        self.right_frame.grid(column=2, row=2, sticky='wens', padx=3)
+        self.prohib_words = ProhibitedWords(self, width=350)
+        self.prohib_words.grid(column=2, row=2, sticky='wens', padx=3)
 
-        self.start_btn = ctk.CTkButton(self, text="Start")
-        self.start_btn.grid(column =1, columnspan=2, row=3, pady=10)
+        self.configs = Configs(self, width=350)
+        self.configs.grid(column=3, row=2, sticky='wens', padx=3)
+
+        self.start_btn = ctk.CTkButton(self, text="Start", command=self.start)
+        self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+
+        self.stop_btn = ctk.CTkButton(self, text="Stop", command=self.stop)
+        
+    
+    def start(self):
+        self.prohib_words.add_prohib_word_btn.configure(state='disabled')
+        for i in self.prohib_words.prohib_words_container.winfo_children():
+            i.prohib_word_entry.configure(state='readonly')
+            i.delete_button.configure(state='disabled')
+        self.start_btn.grid_forget()
+        self.stop_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+    
+    def stop(self):
+        self.prohib_words.add_prohib_word_btn.configure(state='normal')
+        for i in self.prohib_words.prohib_words_container.winfo_children():
+            i.prohib_word_entry.configure(state='normal')
+            i.delete_button.configure(state='normal')
+        self.stop_btn.grid_forget()
+        self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
 
 if __name__ == "__main__":
     if not os.path.isfile('prohibited_words.txt'):

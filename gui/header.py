@@ -9,5 +9,5 @@ class Header(ctk.CTkFrame):
             self.title = ctk.CTkLabel(self, text="NaverKin Autoanswer Bot", font=ctk.CTkFont(family="Arial", size=40), anchor="center")
             self.title.grid(pady=20)
 
-            self.description = ctk.CTkLabel(self, text="A bot automating answering on Naver Kin using OpenAI ChatGPT.", font=ctk.CTkFont(family="Arial", size=24), anchor="center", wraplength=400)
+            self.description = ctk.CTkLabel(self, text="A bot automating answering on Naver Kin using OpenAI ChatGPT", font=ctk.CTkFont(family="Arial", size=24), anchor="center", wraplength=400)
             self.description.grid()
