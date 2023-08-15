@@ -31,3 +31,39 @@ class Configs(ctk.CTkFrame):
 
         self.prompt_textbox = ctk.CTkTextbox(self.configs_container, font=ctk.CTkFont(family="Arial", size=14), height=80)
         self.prompt_textbox.grid(columnspan = 2, padx=20, pady=(0,10), column=0, sticky='we', row=6)
+
+        self.prescript_textbox.bind("<KeyRelease>", self.update_prescript)
+        self.postscript_textbox.bind("<KeyRelease>", self.update_postscript)
+        self.prompt_textbox.bind("<KeyRelease>", self.update_prompt)
+
+        self.load_prescript()
+        self.load_postscript()
+        self.load_prompt()
+    
+    def update_prescript(self, e):
+        content = e.widget.get(1.0, "end-1c")
+        with open('prescript.txt', 'w+') as f:
+            f.write(content)
+
+    def update_postscript(self, e):
+        content = e.widget.get(1.0, "end-1c")
+        with open('postscript.txt', 'w+') as f:
+            f.write(content)
+
+    def update_prompt(self, e):
+        content = e.widget.get(1.0, "end-1c")
+        with open('prompt.txt', 'w+') as f:
+            f.write(content)
+
+    def load_prescript(self):
+        with open('prescript.txt', 'r+') as f:
+            self.prescript_textbox.insert('insert', f.read())
+
+    def load_postscript(self):
+        with open('postscript.txt', 'r+') as f:
+            self.postscript_textbox.insert('insert', f.read())
+    
+    def load_prompt(self):
+        with open('prompt.txt', 'r+') as f:
+            self.prompt_textbox.insert('insert', f.read())
+        

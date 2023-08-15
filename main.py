@@ -42,14 +42,21 @@ class NaverKinAnswerBot(ctk.CTk):
         for i in self.prohib_words.prohib_words_container.winfo_children():
             i.prohib_word_entry.configure(state='readonly')
             i.delete_button.configure(state='disabled')
+        self.configs.prescript_textbox.configure(state='disabled')
+        self.configs.postscript_textbox.configure(state='disabled')
+        self.configs.prompt_textbox.configure(state='disabled')
         self.start_btn.grid_forget()
         self.stop_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+
     
     def stop(self):
         self.prohib_words.add_prohib_word_btn.configure(state='normal')
         for i in self.prohib_words.prohib_words_container.winfo_children():
             i.prohib_word_entry.configure(state='normal')
             i.delete_button.configure(state='normal')
+        self.configs.prescript_textbox.configure(state='normal')
+        self.configs.postscript_textbox.configure(state='normal')
+        self.configs.prompt_textbox.configure(state='normal')
         self.stop_btn.grid_forget()
         self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
 

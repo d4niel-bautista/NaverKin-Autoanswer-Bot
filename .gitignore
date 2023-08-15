@@ -1,4 +1,9 @@
 __pycache__
 venv/
+functions/naverkin_cookies.json
 creds.txt
 prohibited_words.txt
+postscript.txt
+prescript.txt
+prompt.txt
+functions/token.txt

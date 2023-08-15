@@ -67,24 +67,24 @@ class NaverKinCrawler():
         except Exception as e:
             print(e)
 
-    def get_interests(self):
-        soup = BeautifulSoup(self.driver.page_source, 'lxml')
-        interests_ul = soup.find('ul', {'class': 'directory_list _interest_list'})
-        z = [i for i in interests_ul]
-        for i in z:
-            print(i)
-            i.decompose()
-            print(i)
-    
+    # def get_interests(self):
+    #     soup = BeautifulSoup(self.driver.page_source, 'lxml')
+    #     interests_ul = soup.find('ul', {'class': 'directory_list _interest_list'})
+    #     z = [i.find('a').extract() for i in interests_ul.find_all('li')]
+    #     [print(j) for j in z]
+    def answer_questions(self):
+        interest = self.driver.find_element('xpath', '//*[@id="main_content"]/div[2]/div[2]/div/div[1]/div[2]/ul[1]/li[2]/a')
+        interest.click()
+
     def save_cookies(self):
         with open('naverkin_cookies.json', 'w+') as f:
             json.dump(self.driver.get_cookies(), f)
+        print("cookies saved")
     
     def start(self):
         self.login_naverkin()
-        time.sleep(60)
+        time.sleep(30)
         self.save_cookies()
-        self.get_interests()
 
 if __name__ == '__main__':
     z = NaverKinCrawler()
