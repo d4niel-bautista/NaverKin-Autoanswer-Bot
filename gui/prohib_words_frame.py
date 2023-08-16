@@ -21,12 +21,12 @@ class ProhibitedWords(ctk.CTkFrame):
         prohib_word = ProhibWordItem(self.prohib_words_container)
         prohib_word.grid(pady=3, sticky='we')
 
-        with open('prohibited_words.txt', 'a+') as f:
-            f.write('\n')
+        with open('prohibited_words.txt', 'ab+') as f:
+            f.write('\n'.encode('euc-kr'))
     
     def init_words(self):
-        with open("prohibited_words.txt", "r+") as f:
-            items = [line for line in f.readlines()]
+        with open("prohibited_words.txt", "rb+") as f:
+            items = [line.decode('euc-kr') for line in f.readlines()]
         for i in items:
             prohib_word = ProhibWordItem(self.prohib_words_container, i.rstrip())
             prohib_word.grid(pady=3)
@@ -52,19 +52,20 @@ class ProhibWordItem(ctk.CTkFrame):
         self.prohib_word_entry.configure(validate='all', validatecommand=vcmd_prohib_text)
 
     def update_word(self, P, s):
-        with open("prohibited_words.txt", "r") as read:
-            words = [i.rstrip() for i in read.readlines()]
-        prev = s
-        words[words.index(prev)] = P
-        with open("prohibited_words.txt", "w") as write:
-            write.writelines(word + "\n" for word in words)
+        with open("prohibited_words.txt", "rb+") as read:
+            words = [i.decode('euc-kr').rstrip() for i in read.readlines()]
+        prev = s.rstrip()
+        words[words.index(prev)] = P.rstrip()
+        with open("prohibited_words.txt", "wb+") as write:
+            write.writelines(word.encode('euc-kr') + "\n".encode('euc-kr') for word in words)
         return True
 
     def delete_word(self):
-        to_delete = self.prohib_word_entry.get()
-        with open("prohibited_words.txt", "r") as read:
-            words = [i.rstrip() for i in read.readlines()]
+        to_delete = self.prohib_word_entry.get().rstrip()
+        with open("prohibited_words.txt", "rb+") as read:
+            words = [i.decode('euc-kr').rstrip() for i in read.readlines()]
             words.remove(to_delete)
-            with open("prohibited_words.txt", "w") as write:
-                write.writelines(word + "\n" for word in words)
+            
+            with open("prohibited_words.txt", "wb+") as write:
+                write.writelines(word.encode('euc-kr') + "\n".encode('euc-kr') for word in words)
         self.destroy()

@@ -5,8 +5,8 @@ with open('token.txt', 'r') as f:
 openai.api_key = token
 
 def get_prompt():
-    with open('../prompt.txt', 'r') as f:
-        prompt = f.read()
+    with open('../prompt.txt', 'rb+') as f:
+        prompt = f.read().decode('euc-kr')
     return prompt
 
 def generate_response(query):
@@ -17,5 +17,3 @@ def generate_response(query):
     response_message = response["choices"][0]["message"].content
     print(query, '\n', response_message)
     return response_message
-
-x = generate_response("this is a test")
