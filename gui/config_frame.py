@@ -41,29 +41,29 @@ class Configs(ctk.CTkFrame):
         self.load_prompt()
     
     def update_prescript(self, e):
-        content = e.widget.get(1.0, "end-1c")
-        with open('prescript.txt', 'w+') as f:
+        content = e.widget.get(1.0, "end-1c").encode('euc-kr')
+        with open('prescript.txt', 'wb+') as f:
             f.write(content)
 
     def update_postscript(self, e):
-        content = e.widget.get(1.0, "end-1c")
-        with open('postscript.txt', 'w+') as f:
+        content = e.widget.get(1.0, "end-1c").encode('euc-kr')
+        with open('postscript.txt', 'wb+') as f:
             f.write(content)
 
     def update_prompt(self, e):
-        content = e.widget.get(1.0, "end-1c")
-        with open('prompt.txt', 'w+') as f:
+        content = e.widget.get(1.0, "end-1c").encode('euc-kr')
+        with open('prompt.txt', 'wb+') as f:
             f.write(content)
 
     def load_prescript(self):
-        with open('prescript.txt', 'r+') as f:
-            self.prescript_textbox.insert('insert', f.read())
+        with open('prescript.txt', 'rb+') as f:
+            self.prescript_textbox.insert('insert', f.read().decode('euc-kr'))
 
     def load_postscript(self):
-        with open('postscript.txt', 'r+') as f:
-            self.postscript_textbox.insert('insert', f.read())
+        with open('postscript.txt', 'rb+') as f:
+            self.postscript_textbox.insert('insert', f.read().decode('euc-kr'))
     
     def load_prompt(self):
-        with open('prompt.txt', 'r+') as f:
-            self.prompt_textbox.insert('insert', f.read())
+        with open('prompt.txt', 'rb+') as f:
+            self.prompt_textbox.insert('insert', f.read().decode('euc-kr'))
         
