@@ -41,21 +41,27 @@ class NaverKinAnswerBot(ctk.CTk):
         self.naverbot = NaverKinCrawler(obj=self)
     
     def start(self):
+        self.prohib_words.add_prohib_word_btn.configure(state='disabled')
+        for i in self.prohib_words.prohib_words_container.winfo_children():
+            i.prohib_word_entry.configure(state='readonly')
+            i.delete_button.configure(state='disabled')
+        self.configs.prescript_textbox.configure(state='disabled')
+        self.configs.postscript_textbox.configure(state='disabled')
+        self.configs.prompt_textbox.configure(state='disabled')
+        self.start_btn.configure(state='disabled')
+        self.start_btn.grid_forget()
+        self.stop_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
         def start_thread(self):
-            self.prohib_words.add_prohib_word_btn.configure(state='disabled')
-            for i in self.prohib_words.prohib_words_container.winfo_children():
-                i.prohib_word_entry.configure(state='readonly')
-                i.delete_button.configure(state='disabled')
-            self.configs.prescript_textbox.configure(state='disabled')
-            self.configs.postscript_textbox.configure(state='disabled')
-            self.configs.prompt_textbox.configure(state='disabled')
-            self.start_btn.grid_forget()
-            self.stop_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
             self.naverbot.start()
         thread = threading.Thread(target=lambda x=self:start_thread(x), daemon=True)
         thread.start()
     
     def stop(self):
+
+        self.stop_btn.grid_forget()
+        self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+    
+    def return_widgets_to_normal(self):
         self.prohib_words.add_prohib_word_btn.configure(state='normal')
         for i in self.prohib_words.prohib_words_container.winfo_children():
             i.prohib_word_entry.configure(state='normal')
@@ -63,8 +69,7 @@ class NaverKinAnswerBot(ctk.CTk):
         self.configs.prescript_textbox.configure(state='normal')
         self.configs.postscript_textbox.configure(state='normal')
         self.configs.prompt_textbox.configure(state='normal')
-        self.stop_btn.grid_forget()
-        self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+        self.start_btn.configure(state='normal')
 
 if __name__ == "__main__":
     if not os.path.isfile('prohibited_words.txt'):

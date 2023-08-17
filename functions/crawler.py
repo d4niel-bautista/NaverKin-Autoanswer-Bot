@@ -18,13 +18,6 @@ class NaverKinCrawler():
     def __init__(self, obj=None):
         self.obj = obj
         self.options = ChromeOptions()
-        self.options.add_argument('--disable-blink-features=AutomationControlled')
-        self.options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
-        self.options.add_argument('--start-maximized')
-
-        self.driver = uc.Chrome(use_subprocess=True, options=self.options)
-        self.driver.set_window_position(0, 0)
-        self.driver.implicitly_wait(20)
 
     def login_naverkin(self):
         with open(creds_txt) as f:
@@ -37,10 +30,11 @@ class NaverKinCrawler():
         user_agent = self.driver.execute_script("return navigator.userAgent;")
 
         self.driver.execute_script("document.getElementById('keep').click()")
-        
+
         time.sleep(1)
         pyperclip.copy(creds[0])
-        # user_field = self.driver.find_element('xpath', '//*[@id="id"]')
+        user_field = self.driver.find_element('xpath', '//*[@id="id"]')
+        user_field.click()
         # for i in creds[0]:
         #     user_field.send_keys(i)
         #     time.sleep(0.2)
@@ -51,7 +45,8 @@ class NaverKinCrawler():
         time.sleep(1)
         
         pyperclip.copy(creds[1])
-        # pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
+        pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
+        pwd_field.click()
         # for i in creds[1]:
         #     pwd_field.send_keys(i)
         #     time.sleep(0.2)
@@ -159,7 +154,17 @@ class NaverKinCrawler():
                 return True
         return False
     
+    def init_driver(self):
+        self.options.add_argument('--disable-blink-features=AutomationControlled')
+        self.options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
+        self.options.add_argument('--start-maximized')
+
+        self.driver = uc.Chrome(use_subprocess=True, options=self.options)
+        self.driver.set_window_position(0, 0)
+        self.driver.implicitly_wait(20)
+    
     def start(self):
+        self.init_driver()
         self.login_naverkin()
         time.sleep(10)
         self.save_cookies()
@@ -169,6 +174,7 @@ class NaverKinCrawler():
         links = self.get_valid_questions()
         for i in links:
             self.answer_question(i)
+        self.obj.return_widgets_to_normal()
         print('DONE')
 
 if __name__ == '__main__':
