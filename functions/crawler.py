@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import json
 from chatgpt import generate_response
 import pyautogui
+import re
 
 class NaverKinCrawler():
     def __init__(self, obj=None):
@@ -111,12 +112,18 @@ class NaverKinCrawler():
 
         self.driver.find_element('xpath', '//*[@id="content"]/div[1]/div/div[1]')
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
-        question_content = soup.select_one('div.c-heading._questionContentsArea').text
+        question_content = soup.select_one('div.c-heading._questionContentsArea')
 
-        if self.check_if_text_has_prohibited_word(question_content):
+        [i.decompose() for i in question_content.find_all('span', {'class' : 'blind'})]
+        [i.decompose() for i in question_content.find_all('span', {'class' : 'grade-point'})]
+        question_content_cleaned = re.sub('\t+', '', question_content.text)
+        question_content_cleaned = re.sub('\n{1,}', '\n', question_content_cleaned)
+        question_content_cleaned = question_content_cleaned.strip()
+
+        if self.check_if_text_has_prohibited_word(question_content_cleaned):
             return
         
-        response = generate_response(question_content)
+        response = generate_response(question_content_cleaned)
         self.driver.find_element('xpath', "//*[contains(@class, 'se-ff-nanumgothic se-fs15')]")
         time.sleep(1)
         pyperclip.copy(response)
@@ -144,7 +151,7 @@ class NaverKinCrawler():
     
     def start(self):
         self.login_naverkin()
-        time.sleep(30)
+        time.sleep(10)
         self.save_cookies()
         self.get_interests()
         self.set_view_type()
