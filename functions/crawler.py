@@ -32,7 +32,6 @@ class NaverKinCrawler():
         
         time.sleep(5)
         user_agent = self.driver.execute_script("return navigator.userAgent;")
-        print(user_agent)
 
         self.driver.execute_script("document.getElementById('keep').click()")
         
@@ -76,12 +75,11 @@ class NaverKinCrawler():
         interests_ul = soup.find('ul', {'class': 'directory_list _interest_list'})
         items = [i.find('a').extract() for i in interests_ul.find_all('li')]
         interests = {}
-        for c, i in enumerate(items):
+        for i in items:
             if len(i.find_all()) >= 1:
                 for j in range(len(i.find_all())):
                     i.find_all()[j].decompose()
             interests[i.text] = '''[onclick="%s"]''' % i['onclick']
-        print(interests)
         return interests
 
     def set_view_type(self):
@@ -98,6 +96,8 @@ class NaverKinCrawler():
         if len(question_items):
             for i in question_items:
                 if len(i.find_all('span', {'class': 'ico_picture sp_common'})) == 0:
+                    if self.check_if_text_has_prohibited_word(i.find('span', {'class': 'tit_txt'}).text):
+                        continue
                     question_links.append(i['href'].rstrip())
                     print(i.find('span', {'class': 'tit_txt'}).text)
         return question_links
@@ -113,6 +113,9 @@ class NaverKinCrawler():
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
         question_content = soup.select_one('div.c-heading._questionContentsArea').text
 
+        if self.check_if_text_has_prohibited_word(question_content):
+            return
+        
         response = generate_response(question_content)
         self.driver.find_element('xpath', "//*[contains(@class, 'se-ff-nanumgothic se-fs15')]")
         time.sleep(1)
@@ -127,6 +130,17 @@ class NaverKinCrawler():
         with open('naverkin_cookies.json', 'w+') as f:
             json.dump(self.driver.get_cookies(), f)
         print("cookies saved")
+
+    def load_prohibited_words(self):
+        with open('../prohibited_words.txt', 'rb+') as f:
+            prohib_words = [i.decode('euc-kr').rstrip() for i in f.readlines()]
+            return prohib_words
+    
+    def check_if_text_has_prohibited_word(self, text):
+        for word in self.prohibited_words:
+            if word in text:
+                return True
+        return False
     
     def start(self):
         self.login_naverkin()
@@ -134,6 +148,7 @@ class NaverKinCrawler():
         self.save_cookies()
         self.get_interests()
         self.set_view_type()
+        self.prohibited_words = self.load_prohibited_words()
         links = self.get_valid_questions()
         for i in links:
             self.answer_question(i)
@@ -141,5 +156,6 @@ class NaverKinCrawler():
 if __name__ == '__main__':
     z = NaverKinCrawler()
     z.start()
+    print('DONE')
     time.sleep(100000)
         
