@@ -1,11 +1,16 @@
 import openai
+import os
 
-with open('token.txt', 'r') as f:
+dirname = os.path.dirname(__file__)
+token_txt = os.path.join(dirname, 'token.txt')
+prompt_txt = os.path.join(dirname, '../prompt.txt')
+
+with open(token_txt, 'r') as f:
     token = f.readline().rstrip()
 openai.api_key = token
 
 def get_prompt():
-    with open('../prompt.txt', 'rb+') as f:
+    with open(prompt_txt, 'rb+') as f:
         prompt = f.read().decode('euc-kr')
     return prompt
 

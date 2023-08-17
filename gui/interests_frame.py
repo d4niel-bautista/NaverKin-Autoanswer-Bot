@@ -12,5 +12,11 @@ class Interests(ctk.CTkFrame):
 
         self.interests_container = ctk.CTkScrollableFrame(self)
         self.interests_container.grid(row=2, column=0, sticky='nswe')
+        self.interests_container.grid_columnconfigure(0, weight=1)
+    
+    def init_interests(self, interests):
+        for i in interests:
+            interest = ctk.CTkButton(self.interests_container, text=i, anchor='w', width=200)
+            interest.grid(pady=3, padx=10, ipadx=2, column=0)
 
         

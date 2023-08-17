@@ -4,9 +4,15 @@ from selenium.webdriver import ChromeOptions
 import pyperclip
 from bs4 import BeautifulSoup
 import json
-from chatgpt import generate_response
+from functions.chatgpt import generate_response
 import pyautogui
 import re
+import os
+
+dirname = os.path.dirname(__file__)
+creds_txt = os.path.join(dirname, '../creds.txt')
+prohib_words_txt = os.path.join(dirname, '../prohibited_words.txt')
+naverkin_cookies_json = os.path.join(dirname, 'naverkin_cookies.json')
 
 class NaverKinCrawler():
     def __init__(self, obj=None):
@@ -21,7 +27,7 @@ class NaverKinCrawler():
         self.driver.implicitly_wait(20)
 
     def login_naverkin(self):
-        with open('../creds.txt') as f:
+        with open(creds_txt) as f:
             creds = [i.rstrip() for i in f.readlines()]
         self.driver.get(r'https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fkin.naver.com%2F')
 
@@ -130,20 +136,20 @@ class NaverKinCrawler():
         time.sleep(7)
  
     def save_cookies(self):
-        with open('naverkin_cookies.json', 'w+') as f:
+        with open(naverkin_cookies_json, 'w+') as f:
             json.dump(self.driver.get_cookies(), f)
         print("cookies saved")
     
     def load_cookies(self):
         try:
-            with open('naverkin_cookies.json', 'r') as f:
+            with open(naverkin_cookies_json, 'r') as f:
                 COOKIES = json.load(f)
             [self.driver.add_cookie(i) for i in COOKIES]
         except Exception as e:
             print(e)
 
     def load_prohibited_words(self):
-        with open('../prohibited_words.txt', 'rb+') as f:
+        with open(prohib_words_txt, 'rb+') as f:
             prohib_words = [i.decode('euc-kr').rstrip() for i in f.readlines()]
             return prohib_words
     
@@ -157,16 +163,17 @@ class NaverKinCrawler():
         self.login_naverkin()
         time.sleep(10)
         self.save_cookies()
-        self.get_interests()
+        self.obj.interests.init_interests(list(self.get_interests().keys()))
         self.set_view_type()
         self.prohibited_words = self.load_prohibited_words()
         links = self.get_valid_questions()
         for i in links:
             self.answer_question(i)
+        print('DONE')
 
 if __name__ == '__main__':
     z = NaverKinCrawler()
     z.start()
-    print('DONE')
+    
     time.sleep(100000)
         
