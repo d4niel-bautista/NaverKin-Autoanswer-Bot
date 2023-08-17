@@ -3,24 +3,17 @@ import time
 from selenium.webdriver import ChromeOptions
 import pyperclip
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
 import json
 from chatgpt import generate_response
-
-PROXY = "221.151.181.101:8000"
-# COOKIES = [{'domain': '.kin.naver.com', 'httpOnly': False, 'name': 'kin_session', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': '"pBiZ1rCCBqKma9vsKxMlKogrFqgqKxnmaqgsKAnmaqgsKAnmaqgsKAnwaqu="'}, {'domain': '.naver.com', 'httpOnly': False, 'name': 'NID_JKL', 'path': '/', 'sameSite': 'Lax', 'secure': True, 'value': 'r8GToEyL4msYRPCPZUDHI2AXcn/eAbaLGGsrkb1ielQ='}, {'domain': 'kin.naver.com', 'httpOnly': False, 'name': 'JSESSIONID', 'path': '/', 'sameSite': 'Lax', 'secure': True, 'value': '91D5DACF42DACD7EE86CCE430B281955'}, {'domain': '.naver.com', 'httpOnly': False, 'name': 'NID_SES', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': 'AAABgeilibLUPhSDeAMEOlLilvE/M8yHNSeXwDbAuM2sigdv5zwtN5kWwLnsc+Tqujwnr54UF/yXEELAPGoh9k6/Bhh5ojMgPMhHIIMjXpE+gn79oOIo62BCs2KlkzJBAGcIKffBXiuotZu7fL7Fq1mB4CqYyFBeRK3ww72oSKiwj80Y6ZLcrC0QcZF4jmsVGkqjsWovHt6JnUps5kh5Ety4HSlYZyQ253eQXH5X7v7ualIrZxlKlufYRFwlVO8cub6GSqiAullufD2NA+Hw3iOBIDpe2ZpGDzgEKqGcCHmC9wfcsD1ch2svPwqrWZedAtjghaJ82rWBPeutP7LFK0SzF2Jc6Q/HtnScvL0/DoZ2ehwACukJ0epF0l0N+roQ8M7W1LOpKQfPPhlDtpj9IU8lOVneVquCRErM6BhSRY+7+ath7H7i5K1xn8iUCNjo0bZL6K1skbhU0q9VkszU/f/DBDq+98lpftcGGnyqmHO7FAhkBC8+o06ww7OwsyXzezRSwwi7UeahGIIf2kgRqmwpGww='}, {'domain': '.naver.com', 'httpOnly': True, 'name': 'NID_AUT', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': '827PHETY3ZjBpiVPwP7RQULE4VqcVGMsecfs3UzW1/8uy6N+IkIToRzMy7hwPn16'}, {'domain': '.naver.com', 'httpOnly': False, 'name': 'nid_inf', 'path': '/', 'sameSite': 'Lax', 'secure': False, 'value': '-1523225532'}, {'domain': '.naver.com', 'expiry': 1726627035, 'httpOnly': False, 'name': 'NNB', 'path': '/', 'sameSite': 'None', 'secure': True, 'value': 'L732XD524TNGI'}]
+import pyautogui
 
 class NaverKinCrawler():
     def __init__(self, obj=None):
         self.obj = obj
-        self.agent = UserAgent()
-        self.ua = self.agent.random
         self.options = ChromeOptions()
         self.options.add_argument('--disable-blink-features=AutomationControlled')
-        self.options.add_argument(f'--user-agent={self.ua}')
-        # self.options.add_argument(f'--proxy-server={PROXY}')
+        self.options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
         self.options.add_argument('--start-maximized')
-        self.options.add_argument('--incognito')
 
         self.driver = uc.Chrome(use_subprocess=True, options=self.options)
         self.driver.set_window_position(0, 0)
@@ -37,22 +30,30 @@ class NaverKinCrawler():
         except Exception as e:
             print(e)
         
-        time.sleep(10)
+        time.sleep(5)
         user_agent = self.driver.execute_script("return navigator.userAgent;")
         print(user_agent)
 
-        user_field = self.driver.find_element('xpath', '//*[@id="id"]')
-        for i in creds[0]:
-            user_field.send_keys(i)
-            time.sleep(0.2)
+        self.driver.execute_script("document.getElementById('keep').click()")
+        
+        time.sleep(1)
+        pyperclip.copy(creds[0])
+        # user_field = self.driver.find_element('xpath', '//*[@id="id"]')
+        # for i in creds[0]:
+        #     user_field.send_keys(i)
+        #     time.sleep(0.2)
+        pyautogui.hotkey('ctrl', 'v')
 
-        time.sleep(3)
+        time.sleep(2)
+        pyautogui.press('tab')
+        time.sleep(1)
         
         pyperclip.copy(creds[1])
-        pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
-        for i in creds[1]:
-            pwd_field.send_keys(i)
-            time.sleep(0.2)
+        # pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
+        # for i in creds[1]:
+        #     pwd_field.send_keys(i)
+        #     time.sleep(0.2)
+        pyautogui.hotkey('ctrl', 'v')
 
         time.sleep(2)
         login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
@@ -103,14 +104,25 @@ class NaverKinCrawler():
     
     def answer_question(self, link):
         self.driver.get('https://kin.naver.com/' + link)
+        try:
+            self.driver.switch_to.alert.accept()
+        except:
+            pass
+
+        self.driver.find_element('xpath', '//*[@id="content"]/div[1]/div/div[1]')
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
-        question_content = soup.find('div', {'class': 'c-heading _questionContentsArea c-heading--default-old'}).find('div', {'class': 'c-heading__content'}).text
+        question_content = soup.select_one('div.c-heading._questionContentsArea').text
 
         response = generate_response(question_content)
         self.driver.find_element('xpath', "//*[contains(@class, 'se-ff-nanumgothic se-fs15')]")
-        self.driver.execute_script('''document.querySelector('[class="se-ff-nanumgothic se-fs15 __se-node"]').innerHTML = arguments[0]''', response)
+        time.sleep(1)
+        pyperclip.copy(response)
+        time.sleep(1)
+        pyautogui.hotkey('ctrl', 'v')
+        time.sleep(1)
         # self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
-
+        time.sleep(7)
+ 
     def save_cookies(self):
         with open('naverkin_cookies.json', 'w+') as f:
             json.dump(self.driver.get_cookies(), f)
