@@ -24,14 +24,10 @@ class NaverKinCrawler():
         with open('../creds.txt') as f:
             creds = [i.rstrip() for i in f.readlines()]
         self.driver.get(r'https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fkin.naver.com%2F')
-        try:
-            with open('naverkin_cookies.json', 'r') as f:
-                COOKIES = json.load(f)
-            [self.driver.add_cookie(i) for i in COOKIES]
-        except Exception as e:
-            print(e)
-        
-        time.sleep(5)
+
+        time.sleep(3)
+        self.load_cookies()
+        time.sleep(2)
         user_agent = self.driver.execute_script("return navigator.userAgent;")
 
         self.driver.execute_script("document.getElementById('keep').click()")
@@ -137,6 +133,14 @@ class NaverKinCrawler():
         with open('naverkin_cookies.json', 'w+') as f:
             json.dump(self.driver.get_cookies(), f)
         print("cookies saved")
+    
+    def load_cookies(self):
+        try:
+            with open('naverkin_cookies.json', 'r') as f:
+                COOKIES = json.load(f)
+            [self.driver.add_cookie(i) for i in COOKIES]
+        except Exception as e:
+            print(e)
 
     def load_prohibited_words(self):
         with open('../prohibited_words.txt', 'rb+') as f:
