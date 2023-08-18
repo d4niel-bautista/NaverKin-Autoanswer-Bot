@@ -5,6 +5,7 @@ import pyperclip
 from bs4 import BeautifulSoup
 import json
 from functions.chatgpt import generate_response
+from functions.window_getter import bring_window_to_front
 import pyautogui
 import re
 import os
@@ -13,6 +14,7 @@ dirname = os.path.dirname(__file__)
 creds_txt = os.path.join(dirname, '../creds.txt')
 prohib_words_txt = os.path.join(dirname, '../prohibited_words.txt')
 naverkin_cookies_json = os.path.join(dirname, 'naverkin_cookies.json')
+HWND_KEYWORDS = ['지식iN', 'Naver Sign in']
 
 class NaverKinCrawler():
     def __init__(self, obj=None):
@@ -27,7 +29,7 @@ class NaverKinCrawler():
         time.sleep(3)
         self.load_cookies()
         time.sleep(2)
-        user_agent = self.driver.execute_script("return navigator.userAgent;")
+        # user_agent = self.driver.execute_script("return navigator.userAgent;")
 
         self.driver.execute_script("document.getElementById('keep').click()")
 
@@ -38,6 +40,7 @@ class NaverKinCrawler():
         # for i in creds[0]:
         #     user_field.send_keys(i)
         #     time.sleep(0.2)
+        self.focus_browser_window()
         pyautogui.hotkey('ctrl', 'v')
 
         time.sleep(2)
@@ -50,6 +53,7 @@ class NaverKinCrawler():
         # for i in creds[1]:
         #     pwd_field.send_keys(i)
         #     time.sleep(0.2)
+        self.focus_browser_window()
         pyautogui.hotkey('ctrl', 'v')
 
         time.sleep(2)
@@ -58,7 +62,7 @@ class NaverKinCrawler():
         time.sleep(3)
         try:
             pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
-            pwd_field.send_keys(creds[1])
+            pwd_field.click()
 
             time.sleep(20)
 
@@ -106,7 +110,7 @@ class NaverKinCrawler():
             self.driver.switch_to.alert.accept()
         except:
             pass
-
+        time.sleep(2)
         self.driver.find_element('xpath', '//*[@id="content"]/div[1]/div/div[1]')
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
         question_content = soup.select_one('div.c-heading._questionContentsArea')
@@ -125,10 +129,11 @@ class NaverKinCrawler():
         time.sleep(1)
         pyperclip.copy(response)
         time.sleep(1)
+        self.focus_browser_window()
         pyautogui.hotkey('ctrl', 'v')
         time.sleep(1)
         # self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
-        time.sleep(7)
+        time.sleep(15)
  
     def save_cookies(self):
         with open(naverkin_cookies_json, 'w+') as f:
@@ -151,6 +156,7 @@ class NaverKinCrawler():
     def check_if_text_has_prohibited_word(self, text):
         for word in self.prohibited_words:
             if word in text:
+                print('SKIPPED! HAS PROHIBITED WORD: ' + word + '\n')
                 return True
         return False
     
@@ -163,6 +169,13 @@ class NaverKinCrawler():
         self.driver.set_window_position(0, 0)
         self.driver.implicitly_wait(20)
     
+    def focus_browser_window(self):
+        try:
+            bring_window_to_front(HWND_KEYWORDS)
+        except:
+            pyautogui.press("alt")
+            bring_window_to_front(HWND_KEYWORDS)
+
     def start(self):
         self.init_driver()
         self.login_naverkin()

@@ -1,6 +1,6 @@
 import win32gui
 
-def get_window(window_name_keywords):
+def get_all_windows(window_name_keywords):
     result = []
     def winEnumHandler(hwnd, ctx):
         for keyword in window_name_keywords:
@@ -9,5 +9,11 @@ def get_window(window_name_keywords):
     win32gui.EnumWindows(winEnumHandler, None)
     return result
 
-def bring_window_to_front(window_handle):
-    win32gui.SetForegroundWindow(window_handle)
+def bring_window_to_front(window_name_keywords):
+    windows = get_all_windows(window_name_keywords)
+    if windows:
+        for hwnd in windows:
+            win32gui.SetForegroundWindow(hwnd)
+
+# HWND_KEYWORDS = ['지식iN', 'Naver Sign in']
+# bring_window_to_front(HWND_KEYWORDS)
