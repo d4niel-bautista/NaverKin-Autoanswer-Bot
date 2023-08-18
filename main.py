@@ -57,7 +57,7 @@ class NaverKinAnswerBot(ctk.CTk):
         thread.start()
     
     def stop(self):
-
+        self.naverbot.stop = True
         self.stop_btn.grid_forget()
         self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
     

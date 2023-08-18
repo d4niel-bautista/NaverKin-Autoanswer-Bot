@@ -20,7 +20,7 @@ HWND_KEYWORDS = ['지식iN', 'Naver Sign in']
 class NaverKinCrawler():
     def __init__(self, obj=None):
         self.obj = obj
-        self.options = ChromeOptions()
+        self.stop = False
 
     def login_naverkin(self):
         with open(creds_txt) as f:
@@ -181,11 +181,12 @@ class NaverKinCrawler():
         return False
     
     def init_driver(self):
-        self.options.add_argument('--disable-blink-features=AutomationControlled')
-        self.options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
-        self.options.add_argument('--start-maximized')
+        options = ChromeOptions()
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
+        options.add_argument('--start-maximized')
 
-        self.driver = uc.Chrome(use_subprocess=True, options=self.options)
+        self.driver = uc.Chrome(use_subprocess=True, options=options)
         self.driver.set_window_position(0, 0)
         self.driver.implicitly_wait(20)
     
@@ -197,19 +198,42 @@ class NaverKinCrawler():
             bring_window_to_front(HWND_KEYWORDS)
 
     def start(self):
+        self.stop = False
         self.init_driver()
+        self.main()
+        self.driver.quit()
+        self.obj.return_widgets_to_normal()
+        self.obj.stop()
+        print('DONE')
+    
+    def main(self):
+        if self.stop:
+            return
         self.login_naverkin()
+        if self.stop:
+            return
         time.sleep(10)
         self.save_cookies()
+        if self.stop:
+            return
         self.obj.interests.init_interests(list(self.get_interests().keys()))
+        if self.stop:
+            return
         self.set_view_type()
+        if self.stop:
+            return
         self.prohibited_words = self.load_prohibited_words()
         self.prescript, self.postscript = self.load_prescript_and_postcript()
+        if self.stop:
+            return
         links = self.get_valid_questions()
+        if self.stop:
+            return
         for i in links:
+            if self.stop:
+                break
             self.answer_question(i)
-        self.obj.return_widgets_to_normal()
-        print('DONE')
+        return
 
 if __name__ == '__main__':
     z = NaverKinCrawler()
