@@ -88,5 +88,11 @@ if __name__ == "__main__":
     if not os.path.isfile('creds.txt'):
         with open('creds.txt', 'a+') as f:
             f.close()
+    if not os.path.isfile('logs/answered_ids.txt'):
+        with open('logs/answered_ids.txt', 'a+') as f:
+            f.close()
+    if not os.path.isfile('logs/answering_logs.txt'):
+        with open('logs/answering_logs.txt', 'a+') as f:
+            f.close()
     app = NaverKinAnswerBot()
     app.mainloop()

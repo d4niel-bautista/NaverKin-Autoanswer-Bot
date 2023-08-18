@@ -16,6 +16,8 @@ creds_txt = os.path.join(dirname, '../creds.txt')
 prohib_words_txt = os.path.join(dirname, '../prohibited_words.txt')
 naverkin_cookies_json = os.path.join(dirname, 'naverkin_cookies.json')
 HWND_KEYWORDS = ['지식iN', 'Naver Sign in']
+answered_ids_txt = os.path.join(dirname, '../logs/answered_ids.txt')
+answering_logs_txt = os.path.join(dirname, '../logs/answering_logs.txt')
 
 class NaverKinCrawler():
     def __init__(self, obj=None):
@@ -91,8 +93,9 @@ class NaverKinCrawler():
         self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('50')")[0].click()''')
     
     def get_valid_questions(self):
-        self.driver.find_element('xpath', '//*[@id="questionListTypeTitle"]')
-        time.sleep(2)
+        question_list = self.driver.find_element('xpath', '//*[@id="questionListTypeTitle"]')
+        if question_list.get_attribute('style') == 'display: none;':
+            return []
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
         question_items = soup.find_all('a', {'class': '_first_focusable_link'})
         question_links = []
@@ -101,11 +104,15 @@ class NaverKinCrawler():
                 if len(i.find_all('span', {'class': 'ico_picture sp_common'})) + len(i.find_all('span', {'class': 'ico_file sp_common'})) == 0:
                     if self.check_if_text_has_prohibited_word(i.find('span', {'class': 'tit_txt'}).text):
                         continue
+                    if i['href'].rstrip() in self.answered_ids:
+                        continue
                     question_links.append(i['href'].rstrip())
                     print(i.find('span', {'class': 'tit_txt'}).text)
         return question_links
     
     def answer_question(self, link):
+        if link in self.answered_ids:
+            return
         self.driver.get('https://kin.naver.com/' + link)
         try:
             self.driver.switch_to.alert.accept()
@@ -138,11 +145,34 @@ class NaverKinCrawler():
         time.sleep(3)
         if self.register_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
+            self.save_answered_id(link)
+            self.answered_ids.append(link.rstrip())
         time.sleep(10)
     
+    def load_answered_ids(self):
+        with open(answered_ids_txt, 'r+') as f:
+            answered_ids = [i.rstrip() for i in f.readlines()]
+            return answered_ids
+
+    def save_answered_id(self, id):
+        with open(answered_ids_txt, 'a+') as f:
+            f.write(id + '\n')
+
     def answering_log(self, question, response):
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        try:
+            with open(answering_logs_txt, 'a+', encoding='euc-kr') as f:
+                f.write(str(dt_string + '\n' +
+                question + 
+                '\n---------------\n' + 
+                self.prescript + "\n" +
+                response + '\n' +
+                self.postscript +
+                '\n==================================================\n\n'))
+        except Exception as e:
+            print('WRITING LOG TO TXT ERROR')
+            print(e)
         print(dt_string + '\n' +
             question + 
             '\n---------------\n' + 
@@ -206,7 +236,8 @@ class NaverKinCrawler():
         try:
             self.main()
             self.driver.quit()
-        except:
+        except Exception as e:
+            print(e)
             self.driver.quit()
         self.obj.return_widgets_to_normal()
         self.obj.stop()
@@ -215,6 +246,7 @@ class NaverKinCrawler():
     def main(self):
         if self.stop:
             return
+        self.answered_ids = self.load_answered_ids()
         self.login_naverkin()
         if self.stop:
             return
@@ -240,7 +272,7 @@ class NaverKinCrawler():
                     return
                 page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
                 page_element.click()
-                time.sleep(2)
+                time.sleep(1)
                 links += self.get_valid_questions()
                 print(len(links))
                 idx += 1
@@ -251,7 +283,7 @@ class NaverKinCrawler():
                 else:
                     if idx > 12:
                         idx = 3
-                time.sleep(1)
+                time.sleep(2)
             except Exception as e:
                 print(e)
                 break

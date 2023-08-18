@@ -1,6 +1,7 @@
 __pycache__
 venv/
 functions/naverkin_cookies.json
+logs/*
 creds.txt
 prohibited_words.txt
 postscript.txt
