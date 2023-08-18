@@ -20,5 +20,4 @@ def generate_response(query):
                 {"role": "user", "content": query}]
     response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
     response_message = response["choices"][0]["message"].content
-    print(query + '\n---------------\n' + response_message + '\n==================================================\n')
     return response_message

@@ -9,6 +9,7 @@ from functions.window_getter import bring_window_to_front
 import pyautogui
 import re
 import os
+from datetime import datetime
 
 dirname = os.path.dirname(__file__)
 creds_txt = os.path.join(dirname, '../creds.txt')
@@ -131,9 +132,21 @@ class NaverKinCrawler():
         time.sleep(1)
         self.focus_browser_window()
         pyautogui.hotkey('ctrl', 'v')
+        self.answering_log(question_content_cleaned, response)
         time.sleep(1)
         # self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
         time.sleep(15)
+    
+    def answering_log(self, question, response):
+        now = datetime.now()
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        print(dt_string + '\n' +
+            question + 
+            '\n---------------\n' + 
+            self.prescript + "\n" +
+            response + '\n' +
+            self.postscript +
+            '\n==================================================\n')
  
     def save_cookies(self):
         with open(naverkin_cookies_json, 'w+') as f:
@@ -152,6 +165,13 @@ class NaverKinCrawler():
         with open(prohib_words_txt, 'rb+') as f:
             prohib_words = [i.decode('euc-kr').rstrip() for i in f.readlines()]
             return prohib_words
+        
+    def load_prescript_and_postcript(self):
+        with open('prescript.txt', 'rb+') as f:
+            prescript = f.read().decode('euc-kr')
+        with open('postscript.txt', 'rb+') as f:
+            postscript = f.read().decode('euc-kr')
+        return prescript, postscript
     
     def check_if_text_has_prohibited_word(self, text):
         for word in self.prohibited_words:
@@ -184,6 +204,7 @@ class NaverKinCrawler():
         self.obj.interests.init_interests(list(self.get_interests().keys()))
         self.set_view_type()
         self.prohibited_words = self.load_prohibited_words()
+        self.prescript, self.postscript = self.load_prescript_and_postcript()
         links = self.get_valid_questions()
         for i in links:
             self.answer_question(i)
