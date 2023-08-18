@@ -14,12 +14,12 @@ class NaverKinAnswerBot(ctk.CTk):
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
         self.window_width = 920
-        self.window_height = 635
+        self.window_height = 700
         self.x_coordinate = int((self.screen_width/2) - (self.window_width/2))
         self.y_coordinate = int((self.screen_height/2) - (self.window_height/1.9))
         self.geometry(f"{self.window_width}x{self.window_height}+{self.x_coordinate}+{self.y_coordinate}")
         self.grid_columnconfigure((0, 4), weight=1)
-        self.grid_rowconfigure(3, weight=1)
+        self.grid_rowconfigure(4, weight=1)
 
         self.header = Header(master=self, width = 600, height = 150)
         self.header.grid(pady=(10, 5), columnspan=3, column=1, padx=3)
@@ -33,8 +33,15 @@ class NaverKinAnswerBot(ctk.CTk):
         self.configs = Configs(self, width=350)
         self.configs.grid(column=3, row=2, sticky='wens', padx=3)
 
+        self.crawler_config_frame = ctk.CTkFrame(self, )
+        self.crawler_config_frame.grid(column =1, columnspan=3, row=3, pady=(10,0), ipadx=20)
+        self.crawler_config_frame.grid_columnconfigure((0,2), weight=1)
+
+        self.register_answer_checkbox = ctk.CTkCheckBox(self.crawler_config_frame, text='Register Answer', command=self.register_answer)
+        self.register_answer_checkbox.grid(column=1, row=1, pady=10, padx=10)
+
         self.start_btn = ctk.CTkButton(self, text="Start", command=self.start)
-        self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+        self.start_btn.grid(column=1, columnspan=3, row=4, pady=10, sticky='ns')
 
         self.stop_btn = ctk.CTkButton(self, text="Stop", command=self.stop)
 
@@ -50,7 +57,7 @@ class NaverKinAnswerBot(ctk.CTk):
         self.configs.prompt_textbox.configure(state='disabled')
         self.start_btn.configure(state='disabled')
         self.start_btn.grid_forget()
-        self.stop_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+        self.stop_btn.grid(column =1, columnspan=3, row=4, pady=10, sticky='ns')
         def start_thread(self):
             self.naverbot.start()
         thread = threading.Thread(target=lambda x=self:start_thread(x), daemon=True)
@@ -59,7 +66,7 @@ class NaverKinAnswerBot(ctk.CTk):
     def stop(self):
         self.naverbot.stop = True
         self.stop_btn.grid_forget()
-        self.start_btn.grid(column =1, columnspan=3, row=3, pady=10, sticky='ns')
+        self.start_btn.grid(column =1, columnspan=3, row=4, pady=10, sticky='ns')
     
     def return_widgets_to_normal(self):
         self.prohib_words.add_prohib_word_btn.configure(state='normal')
@@ -70,6 +77,9 @@ class NaverKinAnswerBot(ctk.CTk):
         self.configs.postscript_textbox.configure(state='normal')
         self.configs.prompt_textbox.configure(state='normal')
         self.start_btn.configure(state='normal')
+    
+    def register_answer(self):
+        self.naverbot.register_answer = self.register_answer_checkbox.get()
 
 if __name__ == "__main__":
     if not os.path.isfile('prohibited_words.txt'):

@@ -21,6 +21,7 @@ class NaverKinCrawler():
     def __init__(self, obj=None):
         self.obj = obj
         self.stop = False
+        self.register_answer = 0
 
     def login_naverkin(self):
         with open(creds_txt) as f:
@@ -88,9 +89,8 @@ class NaverKinCrawler():
     def set_view_type(self):
         self.driver.execute_script('document.getElementsByClassName("type_title _onlyTitleTypeBtn")[0].click()')
         self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('50')")[0].click()''')
-
+    
     def get_valid_questions(self):
-        self.driver.refresh()
         self.driver.find_element('xpath', '//*[@id="questionListTypeTitle"]')
         time.sleep(2)
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
@@ -98,7 +98,7 @@ class NaverKinCrawler():
         question_links = []
         if len(question_items):
             for i in question_items:
-                if len(i.find_all('span', {'class': 'ico_picture sp_common'})) == 0:
+                if len(i.find_all('span', {'class': 'ico_picture sp_common'})) + len(i.find_all('span', {'class': 'ico_file sp_common'})) == 0:
                     if self.check_if_text_has_prohibited_word(i.find('span', {'class': 'tit_txt'}).text):
                         continue
                     question_links.append(i['href'].rstrip())
@@ -128,14 +128,17 @@ class NaverKinCrawler():
         response = generate_response(question_content_cleaned)
         self.driver.find_element('xpath', "//*[contains(@class, 'se-ff-nanumgothic se-fs15')]")
         time.sleep(1)
-        pyperclip.copy(response)
+        finalized_response = self.prescript + "\n" + response + '\n' + self.postscript
+        time.sleep(1)
+        pyperclip.copy(finalized_response)
         time.sleep(1)
         self.focus_browser_window()
         pyautogui.hotkey('ctrl', 'v')
         self.answering_log(question_content_cleaned, response)
-        time.sleep(1)
-        # self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
-        time.sleep(15)
+        time.sleep(3)
+        if self.register_answer:
+            self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
+        time.sleep(10)
     
     def answering_log(self, question, response):
         now = datetime.now()
@@ -200,8 +203,11 @@ class NaverKinCrawler():
     def start(self):
         self.stop = False
         self.init_driver()
-        self.main()
-        self.driver.quit()
+        try:
+            self.main()
+            self.driver.quit()
+        except:
+            self.driver.quit()
         self.obj.return_widgets_to_normal()
         self.obj.stop()
         print('DONE')
@@ -224,11 +230,31 @@ class NaverKinCrawler():
             return
         self.prohibited_words = self.load_prohibited_words()
         self.prescript, self.postscript = self.load_prescript_and_postcript()
-        if self.stop:
-            return
-        links = self.get_valid_questions()
-        if self.stop:
-            return
+        links = []
+        idx = 1
+        self.driver.refresh()
+        first_page_done = False
+        while True:
+            try:
+                if self.stop:
+                    return
+                page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
+                page_element.click()
+                time.sleep(2)
+                links += self.get_valid_questions()
+                print(len(links))
+                idx += 1
+                if not first_page_done:
+                    if idx > 11:
+                        first_page_done = True
+                        idx = 3
+                else:
+                    if idx > 12:
+                        idx = 3
+                time.sleep(1)
+            except Exception as e:
+                print(e)
+                break
         for i in links:
             if self.stop:
                 break
