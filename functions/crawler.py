@@ -11,6 +11,10 @@ import re
 import os
 from datetime import datetime
 
+chrome_data_path = 'AppData/Local/Google/Chrome/User Data'
+current_user = os.path.expanduser('~')
+user_data_dir = os.path.join(current_user, chrome_data_path)
+
 dirname = os.path.dirname(__file__)
 creds_txt = os.path.join(dirname, '../creds.txt')
 prohib_words_txt = os.path.join(dirname, '../prohibited_words.txt')
@@ -92,7 +96,7 @@ class NaverKinCrawler():
 
     def set_view_type(self):
         self.driver.execute_script('document.getElementsByClassName("type_title _onlyTitleTypeBtn")[0].click()')
-        self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('50')")[0].click()''')
+        self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('10')")[0].click()''')
     
     def get_valid_questions(self):
         question_list = self.driver.find_element('xpath', '//*[@id="questionListTypeTitle"]')
@@ -158,7 +162,10 @@ class NaverKinCrawler():
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
             self.save_answered_id(link)
             self.answered_ids.append(link.rstrip())
-        time.sleep(10)
+        for i in range(30):
+            if self.stop:
+                break
+            time.sleep(1)
     
     def load_answered_ids(self):
         with open(answered_ids_txt, 'r+') as f:
@@ -234,7 +241,7 @@ class NaverKinCrawler():
         options = ChromeOptions()
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
-        options.add_argument('user-data-dir=c:/Users/Developer Daniel/AppData/Local/Google/Chrome/User Data')
+        options.add_argument(f'user-data-dir={user_data_dir}')
         options.add_argument('--start-maximized')
 
         self.driver = uc.Chrome(use_subprocess=True, options=options)
@@ -251,6 +258,9 @@ class NaverKinCrawler():
     def start(self):
         self.stop = False
         self.init_driver()
+        self.driver.get('https://kin.naver.com/test')
+        time.sleep(2)
+        self.load_cookies()
         try:
             self.main()
             self.driver.quit()
@@ -281,6 +291,7 @@ class NaverKinCrawler():
         self.prohibited_words = self.load_prohibited_words()
         self.prescript, self.postscript = self.load_prescript_and_postcript()
         while not self.stop:
+            self.driver.get(r'https://kin.naver.com/')
             links = []
             idx = 1
             self.driver.refresh()
@@ -312,6 +323,13 @@ class NaverKinCrawler():
                 if self.stop:
                     break
                 self.answer_question(i)
+
+            self.driver.get(r'https://kin.naver.com/')
+            try:
+                self.driver.switch_to.alert.accept()
+            except:
+                pass
+
             for i in range(30):
                 if self.stop:
                     break

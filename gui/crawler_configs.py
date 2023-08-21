@@ -48,6 +48,7 @@ class CrawlerConfigs(ctk.CTkFrame):
 
         self.question_delay_interval = value
         self.naverbot.question_delay_interval = int(self.question_delay_interval)
+        self.save_configs()
 
     def set_page_refresh_interval(self, interval):
         interval = interval.split(" ")
@@ -55,38 +56,36 @@ class CrawlerConfigs(ctk.CTkFrame):
 
         self.page_refresh_interval = value
         self.naverbot.page_refresh_interval = int(self.page_refresh_interval)
+        self.save_configs()
     
     def set_max_page(self, page_count):
         self.naverbot.max_page = int(page_count)
+        self.save_configs()
     
     def default_configs(self):
         self.question_delay_interval_menu.set('15 mins')
-        self.set_next_question_interval('15 mins')
-
         self.page_refresh_interval_menu.set('30 mins')
-        self.set_page_refresh_interval('30 mins')
-
         self.max_page_menu.set(1)
+
+        self.set_page_refresh_interval('30 mins')
+        self.set_next_question_interval('15 mins')
         self.set_max_page(1)
-    
+
     def init_configs(self):
         try:
             with open('functions/crawler_configs.json', 'r') as f:
                 configs = json.load(f)
                 self.question_delay_interval_menu.set(configs['next_question_delay'])
-                self.set_next_question_interval(configs['next_question_delay'])
-                configs['next_question_delay'] = int(self.question_delay_interval)
-
                 self.page_refresh_interval_menu.set(configs['page_refresh_interval'])
-                self.set_page_refresh_interval(configs['page_refresh_interval'])
-                configs['page_refresh_interval'] = int(self.page_refresh_interval)
-
                 self.max_page_menu.set(configs['max_page'])
+
+                self.set_page_refresh_interval(configs['page_refresh_interval'])
                 self.set_max_page(configs['max_page'])
+                self.set_next_question_interval(configs['next_question_delay'])
 
                 print(self.naverbot.submit_answer, self.naverbot.question_delay_interval, self.naverbot.page_refresh_interval, self.naverbot.max_page)
         except Exception as e:
-            print(e)
+            print('opening json', e)
             self.default_configs()
             self.save_configs()
     
