@@ -4,6 +4,7 @@ from gui.interests_frame import Interests
 from gui.prohib_words_frame import ProhibitedWords
 from gui.answering_configs import Configs
 from gui.crawler_configs import CrawlerConfigs
+from gui.login import Login
 import os
 from functions.crawler import NaverKinCrawler
 import threading
@@ -44,6 +45,8 @@ class NaverKinAnswerBot(ctk.CTk):
 
         self.crawler_configs = CrawlerConfigs(self, self.naverbot)
         self.crawler_configs.grid(column =1, columnspan=3, row=3, pady=(10,0), ipadx=20)
+
+        self.check_credentials()
     
     def start(self):
         self.prohib_words.add_prohib_word_btn.configure(state='disabled')
@@ -75,13 +78,14 @@ class NaverKinAnswerBot(ctk.CTk):
         self.configs.postscript_textbox.configure(state='normal')
         self.configs.prompt_textbox.configure(state='normal')
         self.start_btn.configure(state='normal')
+    
+    def check_credentials(self):
+        if not os.path.isfile('creds.txt') or len([i.rstrip() for i in open('creds.txt', 'r').readlines()]) != 2 or '' in [i.rstrip() for i in open('creds.txt', 'r').readlines()]:
+            login = Login(self)
 
 if __name__ == "__main__":
     if not os.path.isfile('prohibited_words.txt'):
         with open('prohibited_words.txt', 'a+') as f:
-            f.close()
-    if not os.path.isfile('creds.txt'):
-        with open('creds.txt', 'a+') as f:
             f.close()
     if not os.path.isfile('logs/answered_ids.txt'):
         with open('logs/answered_ids.txt', 'a+') as f:

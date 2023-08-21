@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import json
+from gui.login import Login
 
 class CrawlerConfigs(ctk.CTkFrame):
     def __init__(self, master, naverbot, **kwargs):
@@ -37,7 +38,13 @@ class CrawlerConfigs(ctk.CTkFrame):
         self.submit_answer_checkbox = ctk.CTkCheckBox(self, text='Submit Answer', command=self.submit_answer, checkbox_height=20, checkbox_width=20)
         self.submit_answer_checkbox.grid(column=3, row=2, pady=(5, 10), padx=10, sticky='w')
 
+        self.login_account = ctk.CTkButton(self, text="LOGIN\nACCOUNT", command=self.open_login_widget, width=90, height=70)
+        self.login_account.grid(column=5, row=1, rowspan=2, padx=(5,20))
+
         self.init_configs()
+    
+    def open_login_widget(self):
+        login = Login(self)
     
     def submit_answer(self):
         self.naverbot.submit_answer = self.submit_answer_checkbox.get()
@@ -82,8 +89,6 @@ class CrawlerConfigs(ctk.CTkFrame):
                 self.set_page_refresh_interval(configs['page_refresh_interval'])
                 self.set_max_page(configs['max_page'])
                 self.set_next_question_interval(configs['next_question_delay'])
-
-                print(self.naverbot.submit_answer, self.naverbot.question_delay_interval, self.naverbot.page_refresh_interval, self.naverbot.max_page)
         except Exception as e:
             print('opening json', e)
             self.default_configs()

@@ -275,23 +275,28 @@ class NaverKinCrawler():
         if self.stop:
             return
         self.answered_ids = self.load_answered_ids()
-        self.login_naverkin()
+
         if self.stop:
             return
+        self.driver.get(r'https://kin.naver.com/')
         time.sleep(10)
         self.save_cookies()
+
         if self.stop:
             return
         # self.obj.interests.init_interests(list(self.get_interests().keys()))
+
         if self.stop:
             return
         self.set_view_type()
+
         if self.stop:
             return
         self.prohibited_words = self.load_prohibited_words()
         self.prescript, self.postscript = self.load_prescript_and_postcript()
+
+        #MAIN LOOP
         while not self.stop:
-            self.driver.get(r'https://kin.naver.com/')
             links = []
             idx = 1
             self.driver.refresh()
