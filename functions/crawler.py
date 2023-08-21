@@ -23,58 +23,60 @@ class NaverKinCrawler():
     def __init__(self, obj=None):
         self.obj = obj
         self.stop = False
-        self.register_answer = 0
+        self.submit_answer = 0
+        self.question_delay_interval = 1800
+        self.page_refresh_interval = 3600
+        self.max_page = 1
 
     def login_naverkin(self):
         with open(creds_txt) as f:
             creds = [i.rstrip() for i in f.readlines()]
-        self.driver.get(r'https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fkin.naver.com%2F')
+        self.driver.get(r'https://kin.naver.com/')
+        # time.sleep(3)
+        # self.load_cookies()
+        # time.sleep(2)
+        # # user_agent = self.driver.execute_script("return navigator.userAgent;")
 
-        time.sleep(3)
-        self.load_cookies()
-        time.sleep(2)
-        # user_agent = self.driver.execute_script("return navigator.userAgent;")
-
-        self.driver.execute_script("document.getElementById('keep').click()")
+        # self.driver.execute_script("document.getElementById('keep').click()")
 
         time.sleep(1)
-        pyperclip.copy(creds[0])
-        user_field = self.driver.find_element('xpath', '//*[@id="id"]')
-        user_field.click()
-        # for i in creds[0]:
-        #     user_field.send_keys(i)
-        #     time.sleep(0.2)
-        self.focus_browser_window()
-        pyautogui.hotkey('ctrl', 'v')
+        # pyperclip.copy(creds[0])
+        # user_field = self.driver.find_element('xpath', '//*[@id="id"]')
+        # user_field.click()
+        # # for i in creds[0]:
+        # #     user_field.send_keys(i)
+        # #     time.sleep(0.2)
+        # self.focus_browser_window()
+        # pyautogui.hotkey('ctrl', 'v')
 
-        time.sleep(2)
-        pyautogui.press('tab')
-        time.sleep(1)
+        # time.sleep(2)
+        # pyautogui.press('tab')
+        # time.sleep(1)
         
-        pyperclip.copy(creds[1])
-        pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
-        pwd_field.click()
-        # for i in creds[1]:
-        #     pwd_field.send_keys(i)
-        #     time.sleep(0.2)
-        self.focus_browser_window()
-        pyautogui.hotkey('ctrl', 'v')
+        # pyperclip.copy(creds[1])
+        # pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
+        # pwd_field.click()
+        # # for i in creds[1]:
+        # #     pwd_field.send_keys(i)
+        # #     time.sleep(0.2)
+        # self.focus_browser_window()
+        # pyautogui.hotkey('ctrl', 'v')
 
-        time.sleep(2)
-        login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
-        login_btn.click()
-        time.sleep(3)
-        try:
-            pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
-            pwd_field.click()
+        # time.sleep(2)
+        # login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
+        # login_btn.click()
+        # time.sleep(3)
+        # try:
+        #     pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
+        #     pwd_field.click()
 
-            time.sleep(20)
+        #     time.sleep(20)
 
-            login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
-            login_btn.click()
-            time.sleep(5)
-        except Exception as e:
-            print(e)
+        #     login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
+        #     login_btn.click()
+        #     time.sleep(5)
+        # except Exception as e:
+        #     print(e)
 
     def get_interests(self):
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
@@ -135,15 +137,24 @@ class NaverKinCrawler():
         response = generate_response(question_content_cleaned)
         self.driver.find_element('xpath', "//*[contains(@class, 'se-ff-nanumgothic se-fs15')]")
         time.sleep(1)
-        finalized_response = self.prescript + "\n" + response + '\n' + self.postscript
+
+        finalized_response = ''
+        if self.prescript.rstrip() != '':
+            finalized_response += self.prescript + "\n"
+        finalized_response += response
+        if self.postscript.rstrip() != '':
+            finalized_response += '\n' + self.postscript
+        
         time.sleep(1)
         pyperclip.copy(finalized_response)
         time.sleep(1)
         self.focus_browser_window()
+        textarea = self.driver.find_element('xpath', '//*[@id="smartEditor"]/div/div/div/div[1]/div/section/article')
+        textarea.click()
         pyautogui.hotkey('ctrl', 'v')
         self.answering_log(question_content_cleaned, response)
         time.sleep(3)
-        if self.register_answer:
+        if self.submit_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
             self.save_answered_id(link)
             self.answered_ids.append(link.rstrip())
@@ -161,24 +172,29 @@ class NaverKinCrawler():
     def answering_log(self, question, response):
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+
+        finalized_response = ''
+        if self.prescript.rstrip() != '':
+            finalized_response += self.prescript + "\n"
+        finalized_response += response
+        if self.postscript.rstrip() != '':
+            finalized_response += '\n' + self.postscript
+        
         try:
             with open(answering_logs_txt, 'a+', encoding='euc-kr') as f:
                 f.write(str(dt_string + '\n' +
-                question + 
-                '\n---------------\n' + 
-                self.prescript + "\n" +
-                response + '\n' +
-                self.postscript +
-                '\n==================================================\n\n'))
+                    question + 
+                    '\n---------------\n' + 
+                    finalized_response +
+                    '\n==================================================\n\n'))
         except Exception as e:
             print('WRITING LOG TO TXT ERROR')
             print(e)
+        
         print(dt_string + '\n' +
             question + 
             '\n---------------\n' + 
-            self.prescript + "\n" +
-            response + '\n' +
-            self.postscript +
+            finalized_response +
             '\n==================================================\n')
  
     def save_cookies(self):
@@ -196,7 +212,7 @@ class NaverKinCrawler():
 
     def load_prohibited_words(self):
         with open(prohib_words_txt, 'rb+') as f:
-            prohib_words = [i.decode('euc-kr').rstrip() for i in f.readlines()]
+            prohib_words = [i.decode('euc-kr').rstrip() for i in f.readlines() if i.decode('euc-kr').rstrip()]
             return prohib_words
         
     def load_prescript_and_postcript(self):
@@ -207,16 +223,18 @@ class NaverKinCrawler():
         return prescript, postscript
     
     def check_if_text_has_prohibited_word(self, text):
-        for word in self.prohibited_words:
-            if word in text:
-                print('SKIPPED! HAS PROHIBITED WORD: ' + word + '\n')
-                return True
+        if self.prohibited_words:
+            for word in self.prohibited_words:
+                if word in text:
+                    print('SKIPPED! HAS PROHIBITED WORD: ' + word + '\n')
+                    return True
         return False
     
     def init_driver(self):
         options = ChromeOptions()
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
+        options.add_argument('user-data-dir=c:/Users/Developer Daniel/AppData/Local/Google/Chrome/User Data')
         options.add_argument('--start-maximized')
 
         self.driver = uc.Chrome(use_subprocess=True, options=options)
@@ -254,7 +272,7 @@ class NaverKinCrawler():
         self.save_cookies()
         if self.stop:
             return
-        self.obj.interests.init_interests(list(self.get_interests().keys()))
+        # self.obj.interests.init_interests(list(self.get_interests().keys()))
         if self.stop:
             return
         self.set_view_type()
@@ -262,35 +280,42 @@ class NaverKinCrawler():
             return
         self.prohibited_words = self.load_prohibited_words()
         self.prescript, self.postscript = self.load_prescript_and_postcript()
-        links = []
-        idx = 1
-        self.driver.refresh()
-        first_page_done = False
-        while True:
-            try:
+        while not self.stop:
+            links = []
+            idx = 1
+            self.driver.refresh()
+            first_page_done = False
+            page = 1
+            while page <= self.max_page:
+                try:
+                    if self.stop:
+                        return
+                    page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
+                    page_element.click()
+                    time.sleep(1)
+                    links += self.get_valid_questions()
+                    print(len(links))
+                    idx += 1
+                    if not first_page_done:
+                        if idx > 11:
+                            first_page_done = True
+                            idx = 3
+                    else:
+                        if idx > 12:
+                            idx = 3
+                    time.sleep(2)
+                    page += 1
+                except Exception as e:
+                    print(e)
+                    break
+            for i in links:
                 if self.stop:
-                    return
-                page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
-                page_element.click()
+                    break
+                self.answer_question(i)
+            for i in range(30):
+                if self.stop:
+                    break
                 time.sleep(1)
-                links += self.get_valid_questions()
-                print(len(links))
-                idx += 1
-                if not first_page_done:
-                    if idx > 11:
-                        first_page_done = True
-                        idx = 3
-                else:
-                    if idx > 12:
-                        idx = 3
-                time.sleep(2)
-            except Exception as e:
-                print(e)
-                break
-        for i in links:
-            if self.stop:
-                break
-            self.answer_question(i)
         return
 
 if __name__ == '__main__':

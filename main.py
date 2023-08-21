@@ -2,7 +2,8 @@ import customtkinter as ctk
 from gui.header import Header
 from gui.interests_frame import Interests
 from gui.prohib_words_frame import ProhibitedWords
-from gui.config_frame import Configs
+from gui.answering_configs import Configs
+from gui.crawler_configs import CrawlerConfigs
 import os
 from functions.crawler import NaverKinCrawler
 import threading
@@ -14,7 +15,7 @@ class NaverKinAnswerBot(ctk.CTk):
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
         self.window_width = 920
-        self.window_height = 700
+        self.window_height = 745
         self.x_coordinate = int((self.screen_width/2) - (self.window_width/2))
         self.y_coordinate = int((self.screen_height/2) - (self.window_height/1.9))
         self.geometry(f"{self.window_width}x{self.window_height}+{self.x_coordinate}+{self.y_coordinate}")
@@ -33,19 +34,16 @@ class NaverKinAnswerBot(ctk.CTk):
         self.configs = Configs(self, width=350)
         self.configs.grid(column=3, row=2, sticky='wens', padx=3)
 
-        self.crawler_config_frame = ctk.CTkFrame(self, )
-        self.crawler_config_frame.grid(column =1, columnspan=3, row=3, pady=(10,0), ipadx=20)
-        self.crawler_config_frame.grid_columnconfigure((0,2), weight=1)
-
-        self.register_answer_checkbox = ctk.CTkCheckBox(self.crawler_config_frame, text='Register Answer', command=self.register_answer)
-        self.register_answer_checkbox.grid(column=1, row=1, pady=10, padx=10)
-
+    
         self.start_btn = ctk.CTkButton(self, text="Start", command=self.start)
         self.start_btn.grid(column=1, columnspan=3, row=4, pady=10, sticky='ns')
 
         self.stop_btn = ctk.CTkButton(self, text="Stop", command=self.stop)
 
         self.naverbot = NaverKinCrawler(obj=self)
+
+        self.crawler_configs = CrawlerConfigs(self, self.naverbot)
+        self.crawler_configs.grid(column =1, columnspan=3, row=3, pady=(10,0), ipadx=20)
     
     def start(self):
         self.prohib_words.add_prohib_word_btn.configure(state='disabled')
@@ -77,9 +75,6 @@ class NaverKinAnswerBot(ctk.CTk):
         self.configs.postscript_textbox.configure(state='normal')
         self.configs.prompt_textbox.configure(state='normal')
         self.start_btn.configure(state='normal')
-    
-    def register_answer(self):
-        self.naverbot.register_answer = self.register_answer_checkbox.get()
 
 if __name__ == "__main__":
     if not os.path.isfile('prohibited_words.txt'):
