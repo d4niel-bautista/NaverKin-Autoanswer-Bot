@@ -32,55 +32,67 @@ class NaverKinCrawler():
         self.page_refresh_interval = 3600
         self.max_page = 1
 
-    def login_naverkin(self):
+    def first_run(self):
         with open(creds_txt) as f:
             creds = [i.rstrip() for i in f.readlines()]
-        self.driver.get(r'https://kin.naver.com/')
-        # time.sleep(3)
-        # self.load_cookies()
-        # time.sleep(2)
-        # # user_agent = self.driver.execute_script("return navigator.userAgent;")
+        self.driver.get(r'https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fkin.naver.com%2F')
+        time.sleep(2)
 
-        # self.driver.execute_script("document.getElementById('keep').click()")
+        self.driver.execute_script("document.getElementById('keep').click()")
 
         time.sleep(1)
-        # pyperclip.copy(creds[0])
-        # user_field = self.driver.find_element('xpath', '//*[@id="id"]')
-        # user_field.click()
-        # # for i in creds[0]:
-        # #     user_field.send_keys(i)
-        # #     time.sleep(0.2)
-        # self.focus_browser_window()
-        # pyautogui.hotkey('ctrl', 'v')
+        pyperclip.copy(creds[0])
+        user_field = self.driver.find_element('xpath', '//*[@id="id"]')
+        user_field.click()
+        time.sleep(1.7)
+        user_field.clear()
+        time.sleep(1.7)
+        user_field.click()
+        # for i in creds[0]:
+        #     user_field.send_keys(i)
+        #     time.sleep(0.2)
+        self.focus_browser_window()
+        pyautogui.hotkey('ctrl', 'v')
 
-        # time.sleep(2)
-        # pyautogui.press('tab')
-        # time.sleep(1)
+        time.sleep(2)
+        pyautogui.press('tab')
+        time.sleep(1)
         
-        # pyperclip.copy(creds[1])
-        # pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
-        # pwd_field.click()
-        # # for i in creds[1]:
-        # #     pwd_field.send_keys(i)
-        # #     time.sleep(0.2)
-        # self.focus_browser_window()
-        # pyautogui.hotkey('ctrl', 'v')
+        pyperclip.copy(creds[1])
+        pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
+        pwd_field.click()
+        time.sleep(1.7)
+        pwd_field.clear()
+        time.sleep(1.7)
+        pwd_field.click()
+        # for i in creds[1]:
+        #     pwd_field.send_keys(i)
+        #     time.sleep(0.2)
+        self.focus_browser_window()
+        pyautogui.hotkey('ctrl', 'v')
 
-        # time.sleep(2)
-        # login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
-        # login_btn.click()
-        # time.sleep(3)
-        # try:
-        #     pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
-        #     pwd_field.click()
+        time.sleep(2)
+        login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
+        login_btn.click()
+        time.sleep(3)
+        try:
+            pwd_field = self.driver.find_element('xpath', '//*[@id="pw"]')
+            pwd_field.click()
+            self.focus_browser_window()
+            pyautogui.hotkey('ctrl', 'v')
 
-        #     time.sleep(20)
+            self.sleep(20)
 
-        #     login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
-        #     login_btn.click()
-        #     time.sleep(5)
-        # except Exception as e:
-        #     print(e)
+            login_btn = self.driver.find_element('xpath', '//*[@id="log.login"]')
+            login_btn.click()
+            time.sleep(5)
+        except Exception as e:
+            print(e)
+        self.driver.get('https://kin.naver.com/')
+        self.sleep(8)
+        self.set_view_type()
+        time.sleep(2)
+        self.save_cookies()
 
     def get_interests(self):
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
@@ -162,10 +174,8 @@ class NaverKinCrawler():
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
             self.save_answered_id(link)
             self.answered_ids.append(link.rstrip())
-        for i in range(30):
-            if self.stop:
-                break
-            time.sleep(1)
+
+        self.sleep(int(self.question_delay_interval))
     
     def load_answered_ids(self):
         with open(answered_ids_txt, 'r+') as f:
@@ -188,7 +198,7 @@ class NaverKinCrawler():
             finalized_response += '\n' + self.postscript
         
         try:
-            with open(answering_logs_txt, 'a+', encoding='euc-kr') as f:
+            with open(answering_logs_txt, 'a+', encoding='euc-kr', errors='replace') as f:
                 f.write(str(dt_string + '\n' +
                     question + 
                     '\n---------------\n' + 
@@ -258,12 +268,13 @@ class NaverKinCrawler():
     def start(self):
         self.stop = False
         self.init_driver()
-        self.driver.get('https://kin.naver.com/test')
-        time.sleep(2)
-        self.load_cookies()
         try:
-            self.main()
-            self.driver.quit()
+            if os.path.isfile(naverkin_cookies_json):
+                self.main()
+                self.driver.quit()
+            else:
+                self.first_run()
+                self.driver.quit()
         except Exception as e:
             print(e)
             self.driver.quit()
@@ -272,6 +283,10 @@ class NaverKinCrawler():
         print('DONE')
     
     def main(self):
+        self.driver.get('https://kin.naver.com/test')
+        time.sleep(2)
+        self.load_cookies()
+    
         if self.stop:
             return
         self.answered_ids = self.load_answered_ids()
@@ -279,11 +294,11 @@ class NaverKinCrawler():
         if self.stop:
             return
         self.driver.get(r'https://kin.naver.com/')
-        time.sleep(10)
+        self.sleep(10)
         self.save_cookies()
 
-        if self.stop:
-            return
+        # if self.stop:
+        #     return
         # self.obj.interests.init_interests(list(self.get_interests().keys()))
 
         if self.stop:
@@ -335,11 +350,14 @@ class NaverKinCrawler():
             except:
                 pass
 
-            for i in range(30):
-                if self.stop:
-                    break
-                time.sleep(1)
+            self.sleep(int(self.page_refresh_interval))
         return
+    
+    def sleep(self, interval):
+        for i in range(interval):
+            if self.stop:
+                break
+            time.sleep(1)
 
 if __name__ == '__main__':
     z = NaverKinCrawler()
