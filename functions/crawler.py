@@ -281,7 +281,13 @@ class NaverKinCrawler():
 
     def start(self):
         self.stop = False
-        self.init_driver()
+        try:
+            self.init_driver()
+        except Exception as e:
+            print(e)
+            self.obj.return_widgets_to_normal()
+            self.obj.stop()
+            pass
         try:
             if os.path.isfile(naverkin_cookies_json):
                 self.main()

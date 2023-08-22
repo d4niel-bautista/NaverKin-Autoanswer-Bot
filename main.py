@@ -8,6 +8,7 @@ from gui.login import Login
 import os
 from functions.crawler import NaverKinCrawler
 import threading
+import time
 
 class NaverKinAnswerBot(ctk.CTk):
     def __init__(self):
@@ -73,6 +74,7 @@ class NaverKinAnswerBot(ctk.CTk):
         self.start_btn.grid(column =1, columnspan=3, row=5, pady=10, sticky='ns')
     
     def return_widgets_to_normal(self):
+        time.sleep(5)
         self.prohib_words.add_prohib_word_btn.configure(state='normal')
         for i in self.prohib_words.prohib_words_container.winfo_children():
             i.prohib_word_entry.configure(state='normal')
