@@ -10,6 +10,7 @@ import pyautogui
 import re
 import os
 from datetime import datetime
+from functions.get_chromedriver import get_chrome_browser_version, download_chromedriver
 
 chrome_data_path = 'AppData/Local/Google/Chrome/User Data'
 current_user = os.path.expanduser('~')
@@ -19,7 +20,7 @@ dirname = os.path.dirname(__file__)
 creds_txt = os.path.join(dirname, '../creds.txt')
 prohib_words_txt = os.path.join(dirname, '../prohibited_words.txt')
 naverkin_cookies_json = os.path.join(dirname, 'naverkin_cookies.json')
-HWND_KEYWORDS = ['지식iN', 'Naver Sign in']
+HWND_KEYWORDS = ['지식iN', 'Naver Sign in', 'Knowledge iN']
 answered_ids_txt = os.path.join(dirname, '../logs/answered_ids.txt')
 answering_logs_txt = os.path.join(dirname, '../logs/answering_logs.txt')
 
@@ -110,7 +111,7 @@ class NaverKinCrawler():
 
     def set_view_type(self):
         self.driver.execute_script('document.getElementsByClassName("type_title _onlyTitleTypeBtn")[0].click()')
-        self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('20')")[0].click()''')
+        self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('10')")[0].click()''')
         self.driver.execute_script('''document.querySelector(`a[onclick="nhn.Kin.Utility.nClicks('nql_lgd.latest', '', '', event);"]`).click()''')
     
     def get_valid_questions(self):
@@ -126,11 +127,10 @@ class NaverKinCrawler():
                 if len(i.find_all('span', {'class': 'ico_picture sp_common'})) + len(i.find_all('span', {'class': 'ico_file sp_common'})) + int(i.find('span', {'class': 'num_answer'}).find('em').text) == 0:
                     if self.check_if_text_has_prohibited_word(i.find('span', {'class': 'tit_txt'}).text):
                         continue
-
                     if i.find('a', {'class': '_first_focusable_link'})['href'].rstrip() in self.answered_ids:
                         continue
-
                     question_links.append(i.find('a', {'class': '_first_focusable_link'})['href'].rstrip())
+                    print(i.find('a', {'class': '_first_focusable_link'})['href'].rstrip())
                     print(i.find('span', {'class': 'tit_txt'}).text)
                     break
         return question_links
@@ -138,7 +138,7 @@ class NaverKinCrawler():
     def answer_question(self, link):
         if link in self.answered_ids:
             return
-        self.driver.get('https://kin.naver.com/' + link)
+        self.driver.get('https://kin.naver.com' + link)
         try:
             self.driver.switch_to.alert.accept()
         except:
@@ -185,8 +185,6 @@ class NaverKinCrawler():
             self.answered_ids.append(link.rstrip())
             self.questions_answered_count += 1
             self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
-        self.questions_answered_count += 1
-        self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
         self.sleep(int(self.question_delay_interval)/4)
 
     def load_answered_ids(self):
@@ -266,7 +264,10 @@ class NaverKinCrawler():
         options.add_argument(f'--user-data-dir={user_data_dir}')
         options.add_argument('--start-maximized')
 
-        self.driver = uc.Chrome(use_subprocess=True, options=options)
+        if int(get_chrome_browser_version()) >= 115:
+            self.driver = uc.Chrome(use_subprocess=True, options=options, driver_executable_path=download_chromedriver())
+        else:
+            self.driver = uc.Chrome(use_subprocess=True, options=options)
         self.driver.set_window_position(0, 0)
         self.driver.implicitly_wait(20)
     
@@ -326,7 +327,13 @@ class NaverKinCrawler():
         #MAIN LOOP
         while not self.stop:
             self.questions_answered_count = 0
-            while self.questions_answered_count <= self.max_questions_answered_per_day:
+            while self.questions_answered_count < self.max_questions_answered_per_day:
+                self.driver.get(r'https://kin.naver.com/')
+                try:
+                    self.driver.switch_to.alert.accept()
+                except:
+                    pass
+                time.sleep(2)
                 self.set_view_type()
                 self.sleep(8)
                 links = []
@@ -360,14 +367,8 @@ class NaverKinCrawler():
                     if self.stop:
                         break
                     self.answer_question(i)
-
-                self.driver.get(r'https://kin.naver.com/')
-                try:
-                    self.driver.switch_to.alert.accept()
-                except:
-                    pass
-
                 self.sleep(int(self.page_refresh_interval))
+            print(f"MAX ANSWERS COUNT REACHED {self.questions_answered_count}/{self.max_questions_answered_per_day}")
             self.sleep(43200)
         return
     

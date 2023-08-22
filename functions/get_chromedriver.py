@@ -36,6 +36,3 @@ def extract_chromedriver_zipfile(zip_path, filename):
     chromedriver_path = os.path.join(chromedriver_folder, filename.split('.')[0], "chromedriver.exe")
     os.chmod(chromedriver_path, 0o755)
     return chromedriver_path
-
-if __name__ == "__main__":
-    download_chromedriver()
