@@ -27,7 +27,7 @@ class CrawlerConfigs(ctk.CTkFrame):
         self.max_page_menu = ctk.CTkOptionMenu(self, values=self.max_page_values, variable=self.max_page_variable, command=self.set_max_page, width=50, anchor='c')
         self.max_page_menu.grid(column=1, row=2, pady=(5, 10), padx=(80,15), sticky='w', columnspan=2)
 
-        self.next_question_label = ctk.CTkLabel(self, text="Next question:")
+        self.next_question_label = ctk.CTkLabel(self, text="Submit delay:")
         self.next_question_label.grid(column=3, row=1, pady=(10, 5), padx=10, sticky='w')
 
         self.question_delay_variable = ctk.StringVar()

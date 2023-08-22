@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import os
 
 class Login(ctk.CTkToplevel):
     def __init__(self, master, *args):
@@ -59,4 +60,8 @@ class Login(ctk.CTkToplevel):
             user = self.username_variable.get().rstrip()
             pwd = self.password_variable.get().rstrip()
             f.writelines([i + '\n' for i in [user, pwd]])
+        try:
+            os.remove('functions/naverkin_cookies.json')
+        except:
+            pass
         self.destroy()

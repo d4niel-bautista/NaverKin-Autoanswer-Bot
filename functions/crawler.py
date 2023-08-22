@@ -110,6 +110,7 @@ class NaverKinCrawler():
         return interests
 
     def set_view_type(self):
+        self.driver.execute_script('''document.querySelector(`[onclick="nhn.Kin.Utility.nClicks('ldl.con', '', '', event);"]`).click()''')
         self.driver.execute_script('document.getElementsByClassName("type_title _onlyTitleTypeBtn")[0].click()')
         self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('10')")[0].click()''')
         self.driver.execute_script('''document.querySelector(`a[onclick="nhn.Kin.Utility.nClicks('nql_lgd.latest', '', '', event);"]`).click()''')
