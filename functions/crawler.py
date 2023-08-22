@@ -31,12 +31,14 @@ class NaverKinCrawler():
         self.question_delay_interval = 1800
         self.page_refresh_interval = 3600
         self.max_page = 1
+        self.max_questions_answered_per_day = 10
 
     def first_run(self):
         with open(creds_txt) as f:
             creds = [i.rstrip() for i in f.readlines()]
         self.driver.get(r'https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fkin.naver.com%2F')
         time.sleep(2)
+        pyautogui.press('enter')
 
         self.driver.execute_script("document.getElementById('keep').click()")
 
@@ -108,24 +110,29 @@ class NaverKinCrawler():
 
     def set_view_type(self):
         self.driver.execute_script('document.getElementsByClassName("type_title _onlyTitleTypeBtn")[0].click()')
-        self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('10')")[0].click()''')
+        self.driver.execute_script('''document.getElementsByClassName("_countPerPageValue _param('20')")[0].click()''')
+        self.driver.execute_script('''document.querySelector(`a[onclick="nhn.Kin.Utility.nClicks('nql_lgd.latest', '', '', event);"]`).click()''')
     
     def get_valid_questions(self):
         question_list = self.driver.find_element('xpath', '//*[@id="questionListTypeTitle"]')
         if question_list.get_attribute('style') == 'display: none;':
             return []
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
-        question_items = soup.find_all('a', {'class': '_first_focusable_link'})
+        question_items = soup.find_all('div', class_ = 'answer_box')
         question_links = []
+
         if len(question_items):
             for i in question_items:
-                if len(i.find_all('span', {'class': 'ico_picture sp_common'})) + len(i.find_all('span', {'class': 'ico_file sp_common'})) == 0:
+                if len(i.find_all('span', {'class': 'ico_picture sp_common'})) + len(i.find_all('span', {'class': 'ico_file sp_common'})) + int(i.find('span', {'class': 'num_answer'}).find('em').text) == 0:
                     if self.check_if_text_has_prohibited_word(i.find('span', {'class': 'tit_txt'}).text):
                         continue
-                    if i['href'].rstrip() in self.answered_ids:
+
+                    if i.find('a', {'class': '_first_focusable_link'})['href'].rstrip() in self.answered_ids:
                         continue
-                    question_links.append(i['href'].rstrip())
+
+                    question_links.append(i.find('a', {'class': '_first_focusable_link'})['href'].rstrip())
                     print(i.find('span', {'class': 'tit_txt'}).text)
+                    break
         return question_links
     
     def answer_question(self, link):
@@ -169,14 +176,19 @@ class NaverKinCrawler():
         textarea.click()
         pyautogui.hotkey('ctrl', 'v')
         self.answering_log(question_content_cleaned, response)
-        time.sleep(3)
+
+        self.sleep(int(self.question_delay_interval))
+
         if self.submit_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
             self.save_answered_id(link)
             self.answered_ids.append(link.rstrip())
+            self.questions_answered_count += 1
+            self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
+        self.questions_answered_count += 1
+        self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
+        self.sleep(int(self.question_delay_interval)/4)
 
-        self.sleep(int(self.question_delay_interval))
-    
     def load_answered_ids(self):
         with open(answered_ids_txt, 'r+') as f:
             answered_ids = [i.rstrip() for i in f.readlines()]
@@ -251,7 +263,7 @@ class NaverKinCrawler():
         options = ChromeOptions()
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
-        options.add_argument(f'user-data-dir={user_data_dir}')
+        options.add_argument(f'--user-data-dir={user_data_dir}')
         options.add_argument('--start-maximized')
 
         self.driver = uc.Chrome(use_subprocess=True, options=options)
@@ -286,7 +298,7 @@ class NaverKinCrawler():
         self.driver.get('https://kin.naver.com/test')
         time.sleep(2)
         self.load_cookies()
-    
+
         if self.stop:
             return
         self.answered_ids = self.load_answered_ids()
@@ -294,6 +306,7 @@ class NaverKinCrawler():
         if self.stop:
             return
         self.driver.get(r'https://kin.naver.com/')
+        pyautogui.press('enter')
         self.sleep(10)
         self.save_cookies()
 
@@ -312,49 +325,54 @@ class NaverKinCrawler():
 
         #MAIN LOOP
         while not self.stop:
-            links = []
-            idx = 1
-            self.driver.refresh()
-            first_page_done = False
-            page = 1
-            while page <= self.max_page:
-                try:
+            self.questions_answered_count = 0
+            while self.questions_answered_count <= self.max_questions_answered_per_day:
+                self.set_view_type()
+                self.sleep(8)
+                links = []
+                idx = 1
+                first_page_done = False
+                page = 1
+                while page <= self.max_page:
+                    try:
+                        if self.stop:
+                            return
+                        page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
+                        page_element.click()
+                        time.sleep(1)
+                        links += self.get_valid_questions()
+                        print(len(links))
+                        idx += 1
+                        if not first_page_done:
+                            if idx > 11:
+                                first_page_done = True
+                                idx = 3
+                        else:
+                            if idx > 12:
+                                idx = 3
+                        time.sleep(2)
+                        page += 1
+                    except Exception as e:
+                        print(e)
+                        break
+                self.sleep(5)
+                for i in links:
                     if self.stop:
-                        return
-                    page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
-                    page_element.click()
-                    time.sleep(1)
-                    links += self.get_valid_questions()
-                    print(len(links))
-                    idx += 1
-                    if not first_page_done:
-                        if idx > 11:
-                            first_page_done = True
-                            idx = 3
-                    else:
-                        if idx > 12:
-                            idx = 3
-                    time.sleep(2)
-                    page += 1
-                except Exception as e:
-                    print(e)
-                    break
-            for i in links:
-                if self.stop:
-                    break
-                self.answer_question(i)
+                        break
+                    self.answer_question(i)
 
-            self.driver.get(r'https://kin.naver.com/')
-            try:
-                self.driver.switch_to.alert.accept()
-            except:
-                pass
+                self.driver.get(r'https://kin.naver.com/')
+                try:
+                    self.driver.switch_to.alert.accept()
+                except:
+                    pass
 
-            self.sleep(int(self.page_refresh_interval))
+                self.sleep(int(self.page_refresh_interval))
+            self.sleep(43200)
         return
     
     def sleep(self, interval):
-        for i in range(interval):
+        for i in range(int(interval)):
             if self.stop:
                 break
             time.sleep(1)
