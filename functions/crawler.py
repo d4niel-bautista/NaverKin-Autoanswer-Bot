@@ -1,6 +1,5 @@
 import undetected_chromedriver as uc
 import time
-from selenium.webdriver import ChromeOptions
 import pyperclip
 from bs4 import BeautifulSoup
 import json
@@ -39,7 +38,7 @@ class NaverKinCrawler():
             creds = [i.rstrip() for i in f.readlines()]
         self.driver.get(r'https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fkin.naver.com%2F')
         time.sleep(2)
-        pyautogui.press('enter')
+        pyautogui.press('esc')
 
         self.driver.execute_script("document.getElementById('keep').click()")
 
@@ -259,16 +258,19 @@ class NaverKinCrawler():
         return False
     
     def init_driver(self):
-        options = ChromeOptions()
+        options = uc.ChromeOptions()
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
         options.add_argument(f'--user-data-dir={user_data_dir}')
         options.add_argument('--start-maximized')
+        options.add_argument('--disable-notifications')
 
-        if int(get_chrome_browser_version()) >= 115:
+        chrome_version = int(get_chrome_browser_version())
+        if chrome_version >= 115:
             self.driver = uc.Chrome(use_subprocess=True, options=options, driver_executable_path=download_chromedriver())
+            time.sleep(10)
         else:
-            self.driver = uc.Chrome(use_subprocess=True, options=options)
+            self.driver = uc.Chrome(use_subprocess=True, options=options, version_main=chrome_version)
         self.driver.set_window_position(0, 0)
         self.driver.implicitly_wait(20)
     
@@ -287,7 +289,7 @@ class NaverKinCrawler():
             print(e)
             self.obj.return_widgets_to_normal()
             self.obj.stop()
-            pass
+            return
         try:
             if os.path.isfile(naverkin_cookies_json):
                 self.main()
@@ -314,7 +316,7 @@ class NaverKinCrawler():
         if self.stop:
             return
         self.driver.get(r'https://kin.naver.com/')
-        pyautogui.press('enter')
+        pyautogui.press('esc')
         self.sleep(10)
         self.save_cookies()
 
