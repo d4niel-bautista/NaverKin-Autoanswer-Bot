@@ -5,6 +5,10 @@ dirname = os.path.dirname(__file__)
 token_txt = os.path.join(dirname, 'token.txt')
 prompt_txt = os.path.join(dirname, '../prompt.txt')
 
+if not os.path.isfile(token_txt):
+    with open(token_txt, 'a+') as f:
+        f.close()
+
 with open(token_txt, 'r') as f:
     token = f.readline().rstrip()
 openai.api_key = token

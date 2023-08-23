@@ -92,6 +92,17 @@ if __name__ == "__main__":
     if not os.path.isfile('prohibited_words.txt'):
         with open('prohibited_words.txt', 'a+') as f:
             f.close()
+    if not os.path.isfile('prescript.txt'):
+        with open('prescript.txt', 'a+') as f:
+            f.close()
+    if not os.path.isfile('postscript.txt'):
+        with open('postscript.txt', 'a+') as f:
+            f.close()
+    if not os.path.isfile('prompt.txt'):
+        with open('prompt.txt', 'a+') as f:
+            f.close()
+    if not os.path.isdir('logs/'):
+        os.makedirs('logs/', exist_ok=True)
     if not os.path.isfile('logs/answered_ids.txt'):
         with open('logs/answered_ids.txt', 'a+') as f:
             f.close()
