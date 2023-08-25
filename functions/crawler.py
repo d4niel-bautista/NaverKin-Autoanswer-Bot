@@ -167,10 +167,10 @@ class NaverKinCrawler():
 
         finalized_response = ''
         if self.prescript.rstrip() != '':
-            finalized_response += self.prescript + "\n"
+            finalized_response += self.prescript + "\n\n"
         finalized_response += response
         if self.postscript.rstrip() != '':
-            finalized_response += '\n' + self.postscript
+            finalized_response += '\n\n' + self.postscript
 
         if self.check_if_text_has_prohibited_word(finalized_response):
             return
@@ -194,6 +194,8 @@ class NaverKinCrawler():
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
             try:
                 self.driver.switch_to.alert.accept()
+                self.sleep(int(self.question_delay_interval)/4)
+                return
             except:
                 pass
             self.save_answered_id(link)
@@ -217,10 +219,10 @@ class NaverKinCrawler():
 
         finalized_response = ''
         if self.prescript.rstrip() != '':
-            finalized_response += self.prescript + "\n"
+            finalized_response += self.prescript + "\n\n"
         finalized_response += response
         if self.postscript.rstrip() != '':
-            finalized_response += '\n' + self.postscript
+            finalized_response += '\n\n' + self.postscript
         
         try:
             with open(answering_logs_txt, 'a+', encoding='euc-kr', errors='replace') as f:
@@ -253,7 +255,7 @@ class NaverKinCrawler():
 
     def load_prohibited_words(self):
         with open(prohib_words_txt, 'rb+') as f:
-            prohib_words = [i.decode('euc-kr').rstrip() for i in f.readlines() if i.decode('euc-kr').rstrip()]
+            prohib_words = [i.rstrip() for i in f.read().decode('euc-kr').rstrip().split('\n') if not i=='']
             return prohib_words
         
     def load_prescript_and_postcript(self):
@@ -327,6 +329,9 @@ class NaverKinCrawler():
             else:
                 self.first_run()
                 self.driver.quit()
+                self.obj.return_widgets_to_normal()
+                self.obj.stop()
+                return self.obj.start()
         except Exception as e:
             print(e)
             self.driver.quit()

@@ -16,7 +16,7 @@ class NaverKinAnswerBot(ctk.CTk):
         self.title("NaverKin Answer Bot")
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
-        self.window_width = 920
+        self.window_width = 870
         self.window_height = 780
         self.x_coordinate = int((self.screen_width/2) - (self.window_width/2))
         self.y_coordinate = int((self.screen_height/2) - (self.window_height/1.9))
@@ -30,7 +30,7 @@ class NaverKinAnswerBot(ctk.CTk):
         self.interests = Interests(self, width=160, height=420)
         self.interests.grid(column=1, row=2, sticky='ewns', padx=3)
 
-        self.prohib_words = ProhibitedWords(self, width=350)
+        self.prohib_words = ProhibitedWords(self, width=300)
         self.prohib_words.grid(column=2, row=2, sticky='wens', padx=3)
 
         self.configs = Configs(self, width=350)
@@ -53,10 +53,11 @@ class NaverKinAnswerBot(ctk.CTk):
         self.check_credentials()
     
     def start(self):
-        self.prohib_words.add_prohib_word_btn.configure(state='disabled')
-        for i in self.prohib_words.prohib_words_container.winfo_children():
-            i.prohib_word_entry.configure(state='readonly')
-            i.delete_button.configure(state='disabled')
+        # self.prohib_words.add_prohib_word_btn.configure(state='disabled')
+        # for i in self.prohib_words.prohib_words_container.winfo_children():
+        #     i.prohib_word_entry.configure(state='readonly')
+        #     i.delete_button.configure(state='disabled')
+        self.prohib_words.prohibited_words_textbox.configure(state='disabled')
         self.configs.prescript_textbox.configure(state='disabled')
         self.configs.postscript_textbox.configure(state='disabled')
         self.configs.prompt_textbox.configure(state='disabled')
@@ -75,10 +76,11 @@ class NaverKinAnswerBot(ctk.CTk):
     
     def return_widgets_to_normal(self):
         time.sleep(5)
-        self.prohib_words.add_prohib_word_btn.configure(state='normal')
-        for i in self.prohib_words.prohib_words_container.winfo_children():
-            i.prohib_word_entry.configure(state='normal')
-            i.delete_button.configure(state='normal')
+        # self.prohib_words.add_prohib_word_btn.configure(state='normal')
+        # for i in self.prohib_words.prohib_words_container.winfo_children():
+        #     i.prohib_word_entry.configure(state='normal')
+        #     i.delete_button.configure(state='normal')
+        self.prohib_words.prohibited_words_textbox.configure(state='normal')
         self.configs.prescript_textbox.configure(state='normal')
         self.configs.postscript_textbox.configure(state='normal')
         self.configs.prompt_textbox.configure(state='normal')
