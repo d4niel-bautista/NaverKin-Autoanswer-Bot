@@ -145,13 +145,19 @@ class NaverKinCrawler():
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
         question_content = soup.select_one('div.c-heading._questionContentsArea')
 
+        video_content = question_content.find('div', {'class': 'kin_movie_info'})
+        if video_content:
+            self.sleep(self.question_delay_interval/4)
+            print('SKIPPED! HAS VIDEO CONTENT' + '\n')
+            return
+
         [i.decompose() for i in question_content.find_all('span', {'class' : 'blind'})]
         [i.decompose() for i in question_content.find_all('span', {'class' : 'grade-point'})]
         question_content_cleaned = re.sub('\t+', '', question_content.text)
         question_content_cleaned = re.sub('\n{1,}', '\n', question_content_cleaned)
         question_content_cleaned = question_content_cleaned.strip()
 
-        if self.check_if_text_has_prohibited_word(question_content_cleaned):
+        if self.check_if_text_has_prohibited_word(question_content_cleaned) or self.check_if_text_has_links(question_content_cleaned):
             return
         
         response = generate_response(question_content_cleaned)
@@ -164,20 +170,31 @@ class NaverKinCrawler():
         finalized_response += response
         if self.postscript.rstrip() != '':
             finalized_response += '\n' + self.postscript
+
+        if self.check_if_text_has_prohibited_word(finalized_response):
+            return
         
         time.sleep(1)
         pyperclip.copy(finalized_response)
         time.sleep(1)
         self.focus_browser_window()
-        textarea = self.driver.find_element('xpath', '//*[@id="smartEditor"]/div/div/div/div[1]/div/section/article')
-        textarea.click()
+        pyautogui.press('home')
+        try:
+            textarea = self.driver.find_element('xpath', '//*[@id="smartEditor"]/div/div/div/div[1]/div/section/article')
+            textarea.click()
+        except:
+            print("can't click article element")
         pyautogui.hotkey('ctrl', 'v')
         self.answering_log(question_content_cleaned, response)
 
-        self.sleep(int(self.question_delay_interval))
+        self.sleep(int(self.question_delay_interval)/2)
 
         if self.submit_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
+            try:
+                self.driver.switch_to.alert.accept()
+            except:
+                pass
             self.save_answered_id(link)
             self.answered_ids.append(link.rstrip())
             self.questions_answered_count += 1
@@ -252,6 +269,13 @@ class NaverKinCrawler():
                     print('SKIPPED! HAS PROHIBITED WORD: ' + word + '\n')
                     return True
         return False
+
+    def check_if_text_has_links(self, text):
+        regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+        if re.search(regex, text):
+            print('SKIPPED! HAS A LINK IN THE TEXT' + '\n')
+            return True
+        return False
     
     def init_driver(self):
         options = uc.ChromeOptions()
@@ -276,6 +300,7 @@ class NaverKinCrawler():
         except:
             pyautogui.press("alt")
             bring_window_to_front(HWND_KEYWORDS)
+        pyautogui.press("esc")
 
     def start(self):
         self.current_user = ac.get_current_user()
