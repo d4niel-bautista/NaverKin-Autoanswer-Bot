@@ -30,6 +30,7 @@ class NaverKinCrawler():
         self.page_refresh_interval = 3600
         self.max_page = 1
         self.max_questions_answered_per_day = 10
+        self.questions_answered_count = 0
 
     def first_run(self):
         creds = ac.get_user_creds(self.current_user)
@@ -147,8 +148,8 @@ class NaverKinCrawler():
 
         video_content = question_content.find('div', {'class': 'kin_movie_info'})
         if video_content:
-            self.sleep(self.question_delay_interval/4)
             print('SKIPPED! HAS VIDEO CONTENT' + '\n')
+            self.sleep(self.question_delay_interval/4)
             return
 
         [i.decompose() for i in question_content.find_all('span', {'class' : 'blind'})]
@@ -187,7 +188,7 @@ class NaverKinCrawler():
         pyautogui.hotkey('ctrl', 'v')
         self.answering_log(question_content_cleaned, response)
 
-        self.sleep(int(self.question_delay_interval)/2)
+        self.sleep(int(self.question_delay_interval)/1.5)
 
         if self.submit_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
@@ -306,13 +307,19 @@ class NaverKinCrawler():
         self.current_user = ac.get_current_user()
         print(f"LOGGED IN AS {self.current_user}")
         self.stop = False
+        self.error = False
         try:
             self.init_driver()
         except Exception as e:
             print(e)
             self.obj.return_widgets_to_normal()
+            if self.stop:
+                self.obj.stop()
+                return
             self.obj.stop()
-            return
+            self.error = True
+            if self.error:
+                return self.obj.start()
         try:
             if ac.get_user_cookies(self.current_user):
                 self.main()
@@ -323,9 +330,13 @@ class NaverKinCrawler():
         except Exception as e:
             print(e)
             self.driver.quit()
+            self.error = True
         self.obj.return_widgets_to_normal()
         self.obj.stop()
         print('DONE')
+        if self.error:
+            return self.obj.start()
+        return
     
     def main(self):
         self.driver.get('https://kin.naver.com/test')
@@ -358,7 +369,6 @@ class NaverKinCrawler():
 
         #MAIN LOOP
         while not self.stop:
-            self.questions_answered_count = 0
             while self.questions_answered_count < self.max_questions_answered_per_day:
                 self.driver.get(r'https://kin.naver.com/')
                 try:
@@ -400,8 +410,11 @@ class NaverKinCrawler():
                         break
                     self.answer_question(i)
                 self.sleep(int(self.page_refresh_interval))
-            print(f"MAX ANSWERS COUNT REACHED {self.questions_answered_count}/{self.max_questions_answered_per_day}")
+            if self.questions_answered_count >= self.max_questions_answered_per_day:
+                print(f"MAX ANSWERS COUNT REACHED {self.questions_answered_count}/{self.max_questions_answered_per_day}")
+                self.questions_answered_count = 0
             self.sleep(43200)
+            self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
         return
     
     def sleep(self, interval):
