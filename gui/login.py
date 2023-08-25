@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import os
+from functions.accountmanager import save_user_creds
 
 class Login(ctk.CTkToplevel):
     def __init__(self, master, *args):
@@ -56,12 +57,9 @@ class Login(ctk.CTkToplevel):
             self.save_btn.configure(state='disabled')
 
     def save_login_creds(self):
+        user = self.username_variable.get().rstrip()
+        pwd = self.password_variable.get().rstrip()
         with open('creds.txt', 'w+') as f:
-            user = self.username_variable.get().rstrip()
-            pwd = self.password_variable.get().rstrip()
             f.writelines([i + '\n' for i in [user, pwd]])
-        try:
-            os.remove('functions/naverkin_cookies.json')
-        except:
-            pass
+        save_user_creds(user, pwd)
         self.destroy()

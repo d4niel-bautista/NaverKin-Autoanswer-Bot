@@ -25,7 +25,7 @@ def get_user_creds(user):
 def save_user_creds(user, pwd):
     user_path = os.path.join(accounts_folder, user)
     if not os.path.isdir(user_path):
-        os.makedirs(user_path)
+        os.makedirs(user_path, exist_ok = True)
     with open(os.path.join(user_path, user + '_login.txt'), 'w+') as f:
         f.writelines([i + '\n' for i in [user, pwd]])
 

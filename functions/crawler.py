@@ -2,7 +2,6 @@ import undetected_chromedriver as uc
 import time
 import pyperclip
 from bs4 import BeautifulSoup
-import json
 from functions.chatgpt import generate_response
 from functions.window_getter import bring_window_to_front
 import pyautogui
@@ -10,15 +9,14 @@ import re
 import os
 from datetime import datetime
 from functions.get_chromedriver import get_chrome_browser_version, download_chromedriver
+import functions.accountmanager as ac
 
 chrome_data_path = 'AppData/Local/Google/Chrome/User Data'
 current_user = os.path.expanduser('~')
 user_data_dir = os.path.join(current_user, chrome_data_path)
 
 dirname = os.path.dirname(__file__)
-creds_txt = os.path.join(dirname, '../creds.txt')
 prohib_words_txt = os.path.join(dirname, '../prohibited_words.txt')
-naverkin_cookies_json = os.path.join(dirname, 'naverkin_cookies.json')
 HWND_KEYWORDS = ['지식iN', 'Naver Sign in', 'Knowledge iN']
 answered_ids_txt = os.path.join(dirname, '../logs/answered_ids.txt')
 answering_logs_txt = os.path.join(dirname, '../logs/answering_logs.txt')
@@ -34,8 +32,7 @@ class NaverKinCrawler():
         self.max_questions_answered_per_day = 10
 
     def first_run(self):
-        with open(creds_txt) as f:
-            creds = [i.rstrip() for i in f.readlines()]
+        creds = ac.get_user_creds(self.current_user)
         self.driver.get(r'https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fkin.naver.com%2F')
         time.sleep(2)
         pyautogui.press('esc')
@@ -225,14 +222,13 @@ class NaverKinCrawler():
             '\n==================================================\n')
  
     def save_cookies(self):
-        with open(naverkin_cookies_json, 'w+') as f:
-            json.dump(self.driver.get_cookies(), f)
+        cookies = self.driver.get_cookies()
+        ac.save_user_cookies(self.current_user, cookies)
         print("cookies saved")
     
     def load_cookies(self):
         try:
-            with open(naverkin_cookies_json, 'r') as f:
-                COOKIES = json.load(f)
+            COOKIES = ac.get_user_cookies(self.current_user)
             [self.driver.add_cookie(i) for i in COOKIES]
         except Exception as e:
             print(e)
@@ -282,6 +278,8 @@ class NaverKinCrawler():
             bring_window_to_front(HWND_KEYWORDS)
 
     def start(self):
+        self.current_user = ac.get_current_user()
+        print(f"LOGGED IN AS {self.current_user}")
         self.stop = False
         try:
             self.init_driver()
@@ -291,7 +289,7 @@ class NaverKinCrawler():
             self.obj.stop()
             return
         try:
-            if os.path.isfile(naverkin_cookies_json):
+            if ac.get_user_cookies(self.current_user):
                 self.main()
                 self.driver.quit()
             else:
@@ -344,7 +342,7 @@ class NaverKinCrawler():
                     pass
                 time.sleep(2)
                 self.set_view_type()
-                self.sleep(8)
+                self.sleep(2)
                 links = []
                 idx = 1
                 first_page_done = False
