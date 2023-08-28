@@ -31,6 +31,7 @@ class NaverKinCrawler():
         self.max_page = 1
         self.max_questions_answered_per_day = 10
         self.questions_answered_count = 0
+        self.restart_delay = 86400
 
     def first_run(self):
         creds = ac.get_user_creds(self.current_user)
@@ -418,7 +419,7 @@ class NaverKinCrawler():
             if self.questions_answered_count >= self.max_questions_answered_per_day:
                 print(f"MAX ANSWERS COUNT REACHED {self.questions_answered_count}/{self.max_questions_answered_per_day}")
                 self.questions_answered_count = 0
-            self.sleep(43200)
+            self.sleep(self.restart_delay)
             self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
         return
     

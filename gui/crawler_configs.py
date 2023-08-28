@@ -50,6 +50,14 @@ class CrawlerConfigs(ctk.CTkFrame):
         self.max_questions_answered_per_day = ctk.CTkOptionMenu(self.master.questions_status, values=self.max_questions_values, width=45, height=24, variable=self.max_questions_count_variable, command=self.set_max_questions_count)
         self.max_questions_answered_per_day.grid(column=2, row=1, sticky='w', pady=(5,0))
 
+        self.restart_delay_labels = ctk.CTkLabel(self.master.questions_status, text="Restart after: ")
+        self.restart_delay_labels.grid(column=3, row=1, sticky='e', pady=(5,0), padx=(20,0))
+
+        self.restart_delay_values = [str(i) + ' hrs' for i in range(12,25)]
+        self.restart_delay_variable = ctk.StringVar()
+        self.restart_delay = ctk.CTkOptionMenu(self.master.questions_status, values=self.restart_delay_values, width=45, height=24, variable=self.restart_delay_variable, command=self.set_restart_delay)
+        self.restart_delay.grid(column=4, row=1, sticky='w', pady=(5,0))
+
         self.init_configs()
     
     def open_login_widget(self):
@@ -83,15 +91,23 @@ class CrawlerConfigs(ctk.CTkFrame):
         self.naverbot.max_questions_answered_per_day = max_count
         self.save_configs()
     
+    def set_restart_delay(self, restart_delay):
+        restart_delay = (60 * 60) * int(restart_delay.split(' ')[0])
+        print(self.naverbot.restart_delay)
+        self.naverbot.restart_delay = restart_delay
+        print(self.naverbot.restart_delay)
+        self.save_configs()
+    
     def default_configs(self):
         self.question_delay_interval_menu.set('15 mins')
         self.page_refresh_interval_menu.set('30 mins')
         self.max_page_menu.set(1)
         self.max_questions_answered_per_day.set('10')
+        self.restart_delay.set('24 hrs')
 
         self.set_page_refresh_interval('30 mins')
-        self.set_next_question_interval('15 mins')
         self.set_max_page(1)
+        self.set_next_question_interval('15 mins')
 
     def init_configs(self):
         try:
@@ -101,11 +117,13 @@ class CrawlerConfigs(ctk.CTkFrame):
                 self.page_refresh_interval_menu.set(configs['page_refresh_interval'])
                 self.max_page_menu.set(configs['max_page'])
                 self.max_questions_answered_per_day.set(configs['max_answers_per_day'])
+                self.restart_delay.set(str(configs['restart_delay']) + ' hrs')
 
                 self.set_page_refresh_interval(configs['page_refresh_interval'])
                 self.set_max_page(configs['max_page'])
                 self.set_next_question_interval(configs['next_question_delay'])
                 self.set_max_questions_count(configs['max_answers_per_day'])
+                self.set_restart_delay(str(configs['restart_delay']) + ' hrs')
         except Exception as e:
             print('opening json', e)
             self.default_configs()
@@ -119,6 +137,7 @@ class CrawlerConfigs(ctk.CTkFrame):
             configs['max_page'] = int(self.max_page_menu.get())
             configs['submit_answer'] = self.submit_answer_checkbox.get()
             configs['max_answers_per_day'] = int(self.max_questions_count_variable.get())
+            configs['restart_delay'] = int(self.restart_delay_variable.get().split(' ')[0])
             json.dump(configs, f)
         
         
