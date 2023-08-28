@@ -93,9 +93,7 @@ class CrawlerConfigs(ctk.CTkFrame):
     
     def set_restart_delay(self, restart_delay):
         restart_delay = (60 * 60) * int(restart_delay.split(' ')[0])
-        print(self.naverbot.restart_delay)
         self.naverbot.restart_delay = restart_delay
-        print(self.naverbot.restart_delay)
         self.save_configs()
     
     def default_configs(self):

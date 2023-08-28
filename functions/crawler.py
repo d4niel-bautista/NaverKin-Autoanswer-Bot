@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 from functions.get_chromedriver import get_chrome_browser_version, download_chromedriver
 import functions.accountmanager as ac
+import subprocess
 
 chrome_data_path = 'AppData/Local/Google/Chrome/User Data'
 current_user = os.path.expanduser('~')
@@ -91,6 +92,7 @@ class NaverKinCrawler():
             print(e)
         self.driver.get('https://kin.naver.com/')
         self.sleep(8)
+        self.close_event_popups()
         self.set_view_type()
         time.sleep(2)
         self.save_cookies()
@@ -142,6 +144,7 @@ class NaverKinCrawler():
             self.driver.switch_to.alert.accept()
         except:
             pass
+        self.close_event_popups()
         time.sleep(2)
         self.driver.find_element('xpath', '//*[@id="content"]/div[1]/div/div[1]')
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
@@ -282,6 +285,11 @@ class NaverKinCrawler():
         return False
     
     def init_driver(self):
+        try:
+            subprocess.call('taskkill /f /im chrome.exe /t')
+        except:
+            pass
+
         options = uc.ChromeOptions()
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
@@ -305,6 +313,16 @@ class NaverKinCrawler():
             pyautogui.press("alt")
             bring_window_to_front(HWND_KEYWORDS)
         pyautogui.press("esc")
+
+    def close_event_popups(self):
+        try:
+            event_popup = self.driver.find_elements('class name', 'section_layer')
+            for i in event_popup:
+                if i.get_attribute('style') == 'display: block;':
+                    close_btn = self.driver.find_element('class name', 'layer_btn _close')
+                    close_btn.click()
+        except:
+            pass
 
     def start(self):
         self.current_user = ac.get_current_user()
@@ -358,6 +376,7 @@ class NaverKinCrawler():
         self.driver.get(r'https://kin.naver.com/')
         pyautogui.press('esc')
         self.sleep(10)
+        self.close_event_popups()
         self.save_cookies()
 
         # if self.stop:
@@ -377,6 +396,7 @@ class NaverKinCrawler():
         while not self.stop:
             while self.questions_answered_count < self.max_questions_answered_per_day:
                 self.driver.get(r'https://kin.naver.com/')
+                self.close_event_popups()
                 try:
                     self.driver.switch_to.alert.accept()
                 except:
