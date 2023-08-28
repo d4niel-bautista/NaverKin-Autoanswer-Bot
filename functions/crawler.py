@@ -319,10 +319,10 @@ class NaverKinCrawler():
             event_popup = self.driver.find_elements('class name', 'section_layer')
             for i in event_popup:
                 if i.get_attribute('style') == 'display: block;':
-                    close_btn = self.driver.find_element('class name', 'layer_btn _close')
+                    close_btn = i.find_element('class name', 'layer_btn._close')
                     close_btn.click()
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     def start(self):
         self.current_user = ac.get_current_user()
