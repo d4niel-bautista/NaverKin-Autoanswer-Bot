@@ -5,6 +5,7 @@ from gui.prohib_words_frame import ProhibitedWords
 from gui.answering_configs import Configs
 from gui.crawler_configs import CrawlerConfigs
 from gui.login import Login
+from gui.token import Token
 import os
 from functions.crawler import NaverKinCrawler
 import threading
@@ -89,6 +90,9 @@ class NaverKinAnswerBot(ctk.CTk):
     def check_credentials(self):
         if not os.path.isfile('creds.txt') or len([i.rstrip() for i in open('creds.txt', 'r').readlines()]) != 2 or '' in [i.rstrip() for i in open('creds.txt', 'r').readlines()]:
             login = Login(self)
+        with open('functions/token.txt', 'r') as f:
+            if not f.readlines():
+                token = Token(self)
 
 if __name__ == "__main__":
     if not os.path.isfile('prohibited_words.txt'):

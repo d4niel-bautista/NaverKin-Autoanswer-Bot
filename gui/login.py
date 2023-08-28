@@ -1,5 +1,4 @@
 import customtkinter as ctk
-import os
 from functions.accountmanager import save_user_creds
 
 class Login(ctk.CTkToplevel):
