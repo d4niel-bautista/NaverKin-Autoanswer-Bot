@@ -33,6 +33,7 @@ class NaverKinCrawler():
         self.max_questions_answered_per_day = 10
         self.questions_answered_count = 0
         self.restart_delay = 86400
+        self.reached_id_limit = False
 
     def first_run(self):
         creds = ac.get_user_creds(self.current_user)
@@ -137,15 +138,12 @@ class NaverKinCrawler():
         return question_links
     
     def answer_question(self, link):
-        if link in self.answered_ids:
+        if link in self.answered_ids or self.stop or self.reached_id_limit:
             return
         self.driver.get('https://kin.naver.com' + link)
-        try:
-            self.driver.switch_to.alert.accept()
-        except:
-            pass
+        self.handle_alert()
         self.close_event_popups()
-        time.sleep(2)
+        self.sleep(2)
         self.driver.find_element('xpath', '//*[@id="content"]/div[1]/div/div[1]')
         soup = BeautifulSoup(self.driver.page_source, 'lxml')
         question_content = soup.select_one('div.c-heading._questionContentsArea')
@@ -155,6 +153,8 @@ class NaverKinCrawler():
             print('SKIPPED! HAS VIDEO CONTENT' + '\n')
             self.sleep(self.question_delay_interval/4)
             return
+        if self.stop or self.reached_id_limit:
+            return
 
         [i.decompose() for i in question_content.find_all('span', {'class' : 'blind'})]
         [i.decompose() for i in question_content.find_all('span', {'class' : 'grade-point'})]
@@ -162,7 +162,7 @@ class NaverKinCrawler():
         question_content_cleaned = re.sub('\n{1,}', '\n', question_content_cleaned)
         question_content_cleaned = question_content_cleaned.strip()
 
-        if self.check_if_text_has_prohibited_word(question_content_cleaned) or self.check_if_text_has_links(question_content_cleaned):
+        if self.check_if_text_has_prohibited_word(question_content_cleaned) or self.check_if_text_has_links(question_content_cleaned) or self.reached_id_limit:
             return
         
         response = generate_response(question_content_cleaned)
@@ -197,7 +197,7 @@ class NaverKinCrawler():
         if self.submit_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
             try:
-                self.driver.switch_to.alert.accept()
+                self.handle_alert()
                 self.sleep(int(self.question_delay_interval)/4)
                 return
             except:
@@ -323,6 +323,18 @@ class NaverKinCrawler():
                     close_btn.click()
         except Exception as e:
             print(e)
+        
+    def handle_alert(self):
+        time.sleep(2.5)
+        try:
+            alert = self.driver.switch_to.alert
+            if "[초수] 등급에서 하루에 등록할 수 있는 답변 개수는" in alert.text:
+                self.reached_id_limit = True
+                alert.accept()
+            else:
+                alert.accept()
+        except:
+            pass
 
     def start(self):
         self.current_user = ac.get_current_user()
@@ -334,7 +346,7 @@ class NaverKinCrawler():
         except Exception as e:
             print(e)
             self.obj.return_widgets_to_normal()
-            if self.stop:
+            if self.stop or self.reached_id_limit:
                 self.obj.stop()
                 return
             self.obj.stop()
@@ -357,6 +369,7 @@ class NaverKinCrawler():
             self.error = True
         self.obj.return_widgets_to_normal()
         self.obj.stop()
+
         print('DONE')
         if self.error:
             return self.obj.start()
@@ -367,11 +380,11 @@ class NaverKinCrawler():
         time.sleep(2)
         self.load_cookies()
 
-        if self.stop:
+        if self.stop or self.reached_id_limit:
             return
         self.answered_ids = self.load_answered_ids()
 
-        if self.stop:
+        if self.stop or self.reached_id_limit:
             return
         self.driver.get(r'https://kin.naver.com/')
         pyautogui.press('esc')
@@ -379,15 +392,15 @@ class NaverKinCrawler():
         self.close_event_popups()
         self.save_cookies()
 
-        # if self.stop:
+        # if self.stop or self.reached_id_limit:
         #     return
         # self.obj.interests.init_interests(list(self.get_interests().keys()))
 
-        if self.stop:
+        if self.stop or self.reached_id_limit:
             return
         self.set_view_type()
 
-        if self.stop:
+        if self.stop or self.reached_id_limit:
             return
         self.prohibited_words = self.load_prohibited_words()
         self.prescript, self.postscript = self.load_prescript_and_postcript()
@@ -397,10 +410,7 @@ class NaverKinCrawler():
             while self.questions_answered_count < self.max_questions_answered_per_day:
                 self.driver.get(r'https://kin.naver.com/')
                 self.close_event_popups()
-                try:
-                    self.driver.switch_to.alert.accept()
-                except:
-                    pass
+                self.handle_alert()
                 time.sleep(2)
                 self.set_view_type()
                 self.sleep(2)
@@ -410,7 +420,7 @@ class NaverKinCrawler():
                 page = 1
                 while page <= self.max_page:
                     try:
-                        if self.stop:
+                        if self.stop or self.reached_id_limit:
                             return
                         page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
                         page_element.click()
@@ -432,20 +442,23 @@ class NaverKinCrawler():
                         break
                 self.sleep(5)
                 for i in links:
-                    if self.stop:
+                    if self.stop or self.reached_id_limit:
                         break
                     self.answer_question(i)
                 self.sleep(int(self.page_refresh_interval))
             if self.questions_answered_count >= self.max_questions_answered_per_day:
                 print(f"MAX ANSWERS COUNT REACHED {self.questions_answered_count}/{self.max_questions_answered_per_day}")
                 self.questions_answered_count = 0
+            if self.reached_id_limit:
+                print(f'{self.current_user} HAS REACHED ID LIMIT!')
+                self.reached_id_limit = False
             self.sleep(self.restart_delay)
             self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
         return
     
     def sleep(self, interval):
         for i in range(int(interval)):
-            if self.stop:
+            if self.stop or self.reached_id_limit:
                 break
             time.sleep(1)
 
