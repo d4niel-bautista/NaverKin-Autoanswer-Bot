@@ -196,12 +196,10 @@ class NaverKinCrawler():
 
         if self.submit_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
-            try:
-                self.handle_alert()
+            self.handle_alert()
+            if self.reached_id_limit:
                 self.sleep(int(self.question_delay_interval)/4)
                 return
-            except:
-                pass
             self.save_answered_id(link)
             self.answered_ids.append(link.rstrip())
             self.questions_answered_count += 1
@@ -346,7 +344,7 @@ class NaverKinCrawler():
         except Exception as e:
             print(e)
             self.obj.return_widgets_to_normal()
-            if self.stop or self.reached_id_limit:
+            if self.stop:
                 self.obj.stop()
                 return
             self.obj.stop()
@@ -380,11 +378,11 @@ class NaverKinCrawler():
         time.sleep(2)
         self.load_cookies()
 
-        if self.stop or self.reached_id_limit:
+        if self.stop:
             return
         self.answered_ids = self.load_answered_ids()
 
-        if self.stop or self.reached_id_limit:
+        if self.stop:
             return
         self.driver.get(r'https://kin.naver.com/')
         pyautogui.press('esc')
@@ -392,15 +390,15 @@ class NaverKinCrawler():
         self.close_event_popups()
         self.save_cookies()
 
-        # if self.stop or self.reached_id_limit:
+        # if self.stop:
         #     return
         # self.obj.interests.init_interests(list(self.get_interests().keys()))
 
-        if self.stop or self.reached_id_limit:
+        if self.stop:
             return
         self.set_view_type()
 
-        if self.stop or self.reached_id_limit:
+        if self.stop:
             return
         self.prohibited_words = self.load_prohibited_words()
         self.prescript, self.postscript = self.load_prescript_and_postcript()
@@ -411,6 +409,8 @@ class NaverKinCrawler():
                 self.driver.get(r'https://kin.naver.com/')
                 self.close_event_popups()
                 self.handle_alert()
+                if self.stop or self.reached_id_limit:
+                    break
                 time.sleep(2)
                 self.set_view_type()
                 self.sleep(2)
@@ -421,7 +421,7 @@ class NaverKinCrawler():
                 while page <= self.max_page:
                     try:
                         if self.stop or self.reached_id_limit:
-                            return
+                            break
                         page_element = self.driver.find_element('xpath', f'//*[@id="pagingArea1"]/a[{idx}]')
                         page_element.click()
                         time.sleep(1)
@@ -445,6 +445,8 @@ class NaverKinCrawler():
                     if self.stop or self.reached_id_limit:
                         break
                     self.answer_question(i)
+                if self.stop or self.reached_id_limit:
+                    break
                 self.sleep(int(self.page_refresh_interval))
             if self.questions_answered_count >= self.max_questions_answered_per_day:
                 print(f"MAX ANSWERS COUNT REACHED {self.questions_answered_count}/{self.max_questions_answered_per_day}")
@@ -452,7 +454,7 @@ class NaverKinCrawler():
             if self.reached_id_limit:
                 print(f'{self.current_user} HAS REACHED ID LIMIT!')
                 self.reached_id_limit = False
-            self.sleep(self.restart_delay)
+            self.sleep_cooldown(self.restart_delay)
             self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
         return
     
@@ -461,10 +463,15 @@ class NaverKinCrawler():
             if self.stop or self.reached_id_limit:
                 break
             time.sleep(1)
+    
+    def sleep_cooldown(self, interval):
+        for i in range(int(interval)):
+            if self.stop:
+                break
+            time.sleep(1)
 
 if __name__ == '__main__':
     z = NaverKinCrawler()
     z.start()
     
     time.sleep(100000)
-        
