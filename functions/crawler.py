@@ -11,6 +11,7 @@ from datetime import datetime
 from functions.get_chromedriver import get_chrome_browser_version, download_chromedriver
 import functions.accountmanager as ac
 import subprocess
+import shutil
 
 chrome_data_path = 'AppData/Local/Google/Chrome/User Data'
 current_user = os.path.expanduser('~')
@@ -192,7 +193,7 @@ class NaverKinCrawler():
         pyautogui.hotkey('ctrl', 'v')
         self.answering_log(question_content_cleaned, response)
 
-        self.sleep(int(self.question_delay_interval)/1.5)
+        self.sleep(int(self.question_delay_interval))
 
         if self.submit_answer:
             self.driver.execute_script("document.querySelector('#answerRegisterButton').click()")
@@ -333,6 +334,12 @@ class NaverKinCrawler():
                 alert.accept()
         except:
             pass
+    
+    def remove_userdata_preferences(self):
+        preferences = os.path.join(user_data_dir, 'Default', 'Preferences')
+        if os.path.isfile(preferences):
+            os.remove(preferences)
+        shutil.rmtree('latest_chromedriver/', ignore_errors=True)
 
     def start(self):
         self.current_user = ac.get_current_user()
@@ -349,6 +356,11 @@ class NaverKinCrawler():
                 return
             self.obj.stop()
             self.error = True
+            self.remove_userdata_preferences()
+            try:
+                self.driver.quit()
+            except:
+                print('No driver found')
             if self.error:
                 return self.obj.start()
         try:
