@@ -247,7 +247,8 @@ class NaverKinCrawler():
     def save_cookies(self):
         cookies = self.driver.get_cookies()
         ac.save_user_cookies(self.current_user, cookies)
-        print("cookies saved")
+        user_agent = self.driver.execute_script("return navigator.userAgent;")
+        ac.save_user_useragent(self.current_user, user_agent)
     
     def load_cookies(self):
         try:
@@ -291,7 +292,9 @@ class NaverKinCrawler():
 
         options = uc.ChromeOptions()
         options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_argument(f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
+        user_agent = ac.get_user_agent(self.current_user)
+        if user_agent:
+            options.add_argument(f'--user-agent={user_agent}')
         options.add_argument(f'--user-data-dir={user_data_dir}')
         options.add_argument('--start-maximized')
         options.add_argument('--disable-notifications')
@@ -327,7 +330,7 @@ class NaverKinCrawler():
         time.sleep(2.5)
         try:
             alert = self.driver.switch_to.alert
-            if "[초수] 등급에서 하루에 등록할 수 있는 답변 개수는" in alert.text:
+            if "등급에서 하루에 등록할 수 있는 답변 개수는" in alert.text:
                 self.reached_id_limit = True
                 alert.accept()
             else:

@@ -22,6 +22,22 @@ def get_user_creds(user):
                 return creds
     return False
 
+def get_user_agent(user):
+    if os.path.isfile(os.path.join(accounts_folder, user, user + '_useragent.txt')):
+        with open(os.path.join(accounts_folder, user, user + '_useragent.txt')) as f:
+            user_agent = f.readline()
+            if user_agent:
+                return user_agent
+    return False
+
+def save_user_useragent(user, useragent):
+    print(f"{user}: {useragent}")
+    user_path = os.path.join(accounts_folder, user)
+    if not os.path.isdir(user_path):
+        os.makedirs(user_path, exist_ok = True)
+    with open(os.path.join(user_path, user + '_useragent.txt'), 'w+') as f:
+        f.write(useragent)
+
 def save_user_creds(user, pwd):
     user_path = os.path.join(accounts_folder, user)
     if not os.path.isdir(user_path):
