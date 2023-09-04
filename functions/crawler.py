@@ -205,7 +205,7 @@ class NaverKinCrawler():
             self.answered_ids.append(link.rstrip())
             self.questions_answered_count += 1
             self.obj.crawler_configs.answered_questions_label.configure(text=f'Answered questions: {self.questions_answered_count}/')
-        self.sleep(int(self.question_delay_interval)/4)
+        self.sleep(int(self.question_delay_interval))
 
     def load_answered_ids(self):
         with open(answered_ids_txt, 'r+') as f:
@@ -390,7 +390,7 @@ class NaverKinCrawler():
     
     def main(self):
         self.driver.get('https://kin.naver.com/test')
-        time.sleep(2)
+        time.sleep(10)
         self.load_cookies()
 
         if self.stop:
@@ -404,7 +404,7 @@ class NaverKinCrawler():
         self.sleep(10)
         self.close_event_popups()
         self.save_cookies()
-
+        time.sleep(10)
         # if self.stop:
         #     return
         # self.obj.interests.init_interests(list(self.get_interests().keys()))
@@ -412,7 +412,7 @@ class NaverKinCrawler():
         if self.stop:
             return
         self.set_view_type()
-
+        time.sleep(5)
         if self.stop:
             return
         self.prohibited_words = self.load_prohibited_words()
@@ -426,9 +426,9 @@ class NaverKinCrawler():
                 self.handle_alert()
                 if self.stop or self.reached_id_limit:
                     break
-                time.sleep(2)
+                time.sleep(10)
                 self.set_view_type()
-                self.sleep(2)
+                self.sleep(5)
                 links = []
                 idx = 1
                 first_page_done = False
