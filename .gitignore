@@ -9,3 +9,4 @@ prescript.txt
 prompt.txt
 functions/token.txt
 accounts/
+*.env

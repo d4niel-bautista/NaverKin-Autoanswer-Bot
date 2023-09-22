@@ -12,6 +12,7 @@ from functions.get_chromedriver import get_chrome_browser_version, download_chro
 import functions.accountmanager as ac
 import subprocess
 import shutil
+from functions.reconnect_modem import reconnect_modem
 
 chrome_data_path = 'AppData/Local/Google/Chrome/User Data'
 current_user = os.path.expanduser('~')
@@ -295,7 +296,7 @@ class NaverKinCrawler():
         user_agent = ac.get_user_agent(self.current_user)
         if user_agent:
             options.add_argument(f'--user-agent={user_agent}')
-        options.add_argument(f'--user-data-dir={user_data_dir}')
+        # options.add_argument(f'--user-data-dir={user_data_dir}')
         options.add_argument('--start-maximized')
         options.add_argument('--disable-notifications')
 
@@ -389,6 +390,7 @@ class NaverKinCrawler():
         return
     
     def main(self):
+        reconnect_modem(self.driver)
         self.driver.get('https://kin.naver.com/test')
         time.sleep(10)
         self.load_cookies()
