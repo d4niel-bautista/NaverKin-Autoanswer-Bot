@@ -367,6 +367,7 @@ class NaverKinCrawler():
                 print('No driver found')
             if self.error:
                 return self.obj.start()
+        reconnect_modem(self.driver)
         try:
             if ac.get_user_cookies(self.current_user):
                 self.main()
@@ -390,7 +391,6 @@ class NaverKinCrawler():
         return
     
     def main(self):
-        reconnect_modem(self.driver)
         self.driver.get('https://kin.naver.com/test')
         time.sleep(10)
         self.load_cookies()
